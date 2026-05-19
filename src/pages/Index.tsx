@@ -139,7 +139,7 @@ export default function Index() {
 
       <main className="flex-1 min-w-0 pt-14 md:pt-0">
         {activePrivate ? (
-          <PrivateChat otherUser={activePrivate} onBack={() => setActivePrivate(null)} />
+          <PrivateChat otherUser={activePrivate} onBack={() => setActivePrivate(null)} onAvatarClick={setOpenUserId} />
         ) : activeRoom ? (
           <RoomChat roomId={activeRoom.id} roomName={activeRoom.name} onAvatarClick={setOpenUserId} />
         ) : (
