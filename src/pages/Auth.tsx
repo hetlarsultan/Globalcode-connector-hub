@@ -6,10 +6,17 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { MessageCircle, Sparkles } from "lucide-react";
+import { MessageCircle, Sparkles, UserRound } from "lucide-react";
 import { signInWithUsername, signUpWithUsername } from "@/lib/auth-helpers";
 import { useAuth } from "@/hooks/useAuth";
+
+// Sanitize username to letters/digits/underscore only (safe for our email mapping)
+const sanitizeUsername = (raw: string) =>
+  raw.toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 24);
+
+const randomUsername = () => `guest_${Math.random().toString(36).slice(2, 8)}${Date.now().toString(36).slice(-3)}`;
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -41,10 +48,12 @@ export default function AuthPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username.length < 3) return toast.error("اسم المستخدم قصير جداً");
+    let uname = sanitizeUsername(username);
+    if (!uname) uname = randomUsername();
+    if (uname.length < 3) return toast.error("اسم المستخدم قصير جداً (٣ أحرف على الأقل)");
     if (password.length < 6) return toast.error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
     setLoading(true);
-    const { error } = await signUpWithUsername(username, password, displayName || username, gender);
+    const { error } = await signUpWithUsername(uname, password, displayName || uname, gender);
     setLoading(false);
     if (error) {
       if (error.message.includes("already")) toast.error("اسم المستخدم مسجّل مسبقاً");
@@ -53,6 +62,16 @@ export default function AuthPage() {
       toast.success("تم إنشاء الحساب بنجاح!");
       navigate("/");
     }
+  };
+
+  const handleGuest = async () => {
+    setLoading(true);
+    const uname = randomUsername();
+    const pass = `${uname}_${Math.random().toString(36).slice(2, 10)}`;
+    const { error } = await signUpWithUsername(uname, pass, `زائر-${uname.slice(-4)}`, "unspecified");
+    setLoading(false);
+    if (error) toast.error("تعذّر الدخول كزائر، حاول مجدداً");
+    else { toast.success("مرحباً أيها الزائر!"); navigate("/"); }
   };
 
   return (
@@ -94,8 +113,8 @@ export default function AuthPage() {
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>اسم المستخدم</Label>
-                  <Input value={username} onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))} required dir="ltr" className="text-right" placeholder="بدون مسافات" />
+                  <Label>اسم المستخدم <span className="text-xs text-muted-foreground">(اختياري - سيُولّد تلقائياً)</span></Label>
+                  <Input value={username} onChange={(e) => setUsername(sanitizeUsername(e.target.value))} dir="ltr" className="text-right" placeholder="حروف إنجليزية وأرقام فقط" />
                 </div>
                 <div className="space-y-2">
                   <Label>الاسم المعروض</Label>
@@ -119,6 +138,16 @@ export default function AuthPage() {
               </form>
             </TabsContent>
           </Tabs>
+
+          <div className="mt-6">
+            <div className="relative my-3">
+              <Separator />
+              <span className="absolute inset-0 -top-2.5 mx-auto w-fit bg-card px-2 text-xs text-muted-foreground">أو</span>
+            </div>
+            <Button type="button" variant="outline" className="w-full gap-2" disabled={loading} onClick={handleGuest}>
+              <UserRound className="h-4 w-4" /> دخول كزائر
+            </Button>
+          </div>
         </Card>
       </div>
     </div>
