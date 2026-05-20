@@ -48,10 +48,12 @@ export default function AuthPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username.length < 3) return toast.error("اسم المستخدم قصير جداً");
+    let uname = sanitizeUsername(username);
+    if (!uname) uname = randomUsername();
+    if (uname.length < 3) return toast.error("اسم المستخدم قصير جداً (٣ أحرف على الأقل)");
     if (password.length < 6) return toast.error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
     setLoading(true);
-    const { error } = await signUpWithUsername(username, password, displayName || username, gender);
+    const { error } = await signUpWithUsername(uname, password, displayName || uname, gender);
     setLoading(false);
     if (error) {
       if (error.message.includes("already")) toast.error("اسم المستخدم مسجّل مسبقاً");
@@ -60,6 +62,16 @@ export default function AuthPage() {
       toast.success("تم إنشاء الحساب بنجاح!");
       navigate("/");
     }
+  };
+
+  const handleGuest = async () => {
+    setLoading(true);
+    const uname = randomUsername();
+    const pass = `${uname}_${Math.random().toString(36).slice(2, 10)}`;
+    const { error } = await signUpWithUsername(uname, pass, `زائر-${uname.slice(-4)}`, "unspecified");
+    setLoading(false);
+    if (error) toast.error("تعذّر الدخول كزائر، حاول مجدداً");
+    else { toast.success("مرحباً أيها الزائر!"); navigate("/"); }
   };
 
   return (
