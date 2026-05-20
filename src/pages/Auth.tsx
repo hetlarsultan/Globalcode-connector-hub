@@ -113,8 +113,8 @@ export default function AuthPage() {
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
-                  <Label>اسم المستخدم</Label>
-                  <Input value={username} onChange={(e) => setUsername(e.target.value.replace(/\s/g, ""))} required dir="ltr" className="text-right" placeholder="بدون مسافات" />
+                  <Label>اسم المستخدم <span className="text-xs text-muted-foreground">(اختياري - سيُولّد تلقائياً)</span></Label>
+                  <Input value={username} onChange={(e) => setUsername(sanitizeUsername(e.target.value))} dir="ltr" className="text-right" placeholder="حروف إنجليزية وأرقام فقط" />
                 </div>
                 <div className="space-y-2">
                   <Label>الاسم المعروض</Label>
