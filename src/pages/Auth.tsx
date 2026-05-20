@@ -138,6 +138,16 @@ export default function AuthPage() {
               </form>
             </TabsContent>
           </Tabs>
+
+          <div className="mt-6">
+            <div className="relative my-3">
+              <Separator />
+              <span className="absolute inset-0 -top-2.5 mx-auto w-fit bg-card px-2 text-xs text-muted-foreground">أو</span>
+            </div>
+            <Button type="button" variant="outline" className="w-full gap-2" disabled={loading} onClick={handleGuest}>
+              <UserRound className="h-4 w-4" /> دخول كزائر
+            </Button>
+          </div>
         </Card>
       </div>
     </div>
