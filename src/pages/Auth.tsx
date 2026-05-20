@@ -6,10 +6,17 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { MessageCircle, Sparkles } from "lucide-react";
+import { MessageCircle, Sparkles, UserRound } from "lucide-react";
 import { signInWithUsername, signUpWithUsername } from "@/lib/auth-helpers";
 import { useAuth } from "@/hooks/useAuth";
+
+// Sanitize username to letters/digits/underscore only (safe for our email mapping)
+const sanitizeUsername = (raw: string) =>
+  raw.toLowerCase().replace(/[^a-z0-9_]/g, "").slice(0, 24);
+
+const randomUsername = () => `guest_${Math.random().toString(36).slice(2, 8)}${Date.now().toString(36).slice(-3)}`;
 
 export default function AuthPage() {
   const navigate = useNavigate();
