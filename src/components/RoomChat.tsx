@@ -206,9 +206,10 @@ export function RoomChat({ roomId, roomName, onAvatarClick }: Props) {
               />
               <div className={cn("max-w-[75%] flex flex-col gap-0.5", mine && "items-end")}>
                 {!mine && (
-                  <button onClick={() => insertMention(m.profile?.username || "")}
+                  <button onClick={() => setReplyTo(m)}
                     className="text-xs font-semibold hover:underline px-1"
-                    style={nameStyle}>
+                    style={nameStyle}
+                    title="اضغط للرد على هذا المستخدم">
                     {m.profile?.display_name}
                   </button>
                 )}
