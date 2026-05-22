@@ -157,6 +157,8 @@ export default function Index() {
           <ProfileEditor onClose={() => setShowProfile(false)} />
         </DialogContent>
       </Dialog>
+
+      <IncomingCallListener />
     </div>
   );
 }
