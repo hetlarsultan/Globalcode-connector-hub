@@ -91,11 +91,29 @@ export function PrivateChat({ otherUser, onBack, onAvatarClick }: Props) {
         <Button variant="ghost" size="icon" onClick={onBack}><ArrowRight className="h-5 w-5" /></Button>
         <UserAvatar url={otherUser.avatar_url} name={otherUser.display_name} gender={otherUser.gender} size="sm"
           onClick={() => onAvatarClick?.(otherUser.id)} />
-        <button onClick={() => onAvatarClick?.(otherUser.id)} className="text-right">
-          <div className="font-semibold">{otherUser.display_name}</div>
-          <div className="text-xs text-muted-foreground">@{otherUser.username}</div>
+        <button onClick={() => onAvatarClick?.(otherUser.id)} className="text-right flex-1 min-w-0">
+          <div className="font-semibold truncate">{otherUser.display_name}</div>
+          <div className="text-xs text-muted-foreground truncate">@{otherUser.username}</div>
         </button>
+        <Button variant="ghost" size="icon" title="مكالمة صوتية" onClick={() => setCallMode("audio")}>
+          <Phone className="h-5 w-5" />
+        </Button>
+        <Button variant="ghost" size="icon" title="مكالمة فيديو" onClick={() => setCallMode("video")}>
+          <Video className="h-5 w-5" />
+        </Button>
       </div>
+
+      {callMode && user && (
+        <CallDialog
+          open={true}
+          onClose={() => setCallMode(null)}
+          selfId={user.id}
+          peerId={otherUser.id}
+          peerName={otherUser.display_name}
+          mode={callMode}
+          role="caller"
+        />
+      )}
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin bg-gradient-to-b from-background to-secondary/30">
         {msgs.map((m) => {
