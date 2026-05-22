@@ -32,6 +32,7 @@ export function PrivateChat({ otherUser, onBack, onAvatarClick }: Props) {
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [callMode, setCallMode] = useState<"audio" | "video" | null>(null);
 
   useEffect(() => {
     if (!user) return;
