@@ -4,10 +4,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { UserAvatar } from "./UserAvatar";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { Send, ArrowRight, Image as ImageIcon } from "lucide-react";
+import { Send, ArrowRight, Image as ImageIcon, Phone, Video } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Prefs, playPing } from "@/lib/local-prefs";
+import { CallDialog } from "./CallDialog";
 
 interface PM {
   id: string;
