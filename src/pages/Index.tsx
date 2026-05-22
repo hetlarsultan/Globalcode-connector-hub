@@ -9,6 +9,7 @@ import { FriendsList } from "@/components/FriendsList";
 import { ConversationsList } from "@/components/ConversationsList";
 import { UserCard } from "@/components/UserCard";
 import { ProfileEditor } from "@/components/ProfileEditor";
+import { IncomingCallListener } from "@/components/IncomingCallListener";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
