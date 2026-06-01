@@ -37,6 +37,10 @@ export default function AuthPage() {
   const [signupAge, setSignupAge] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "unspecified">("unspecified");
 
+  // guest dialog
+  const [guestOpen, setGuestOpen] = useState(false);
+  const [guestName, setGuestName] = useState("");
+
   useEffect(() => {
     if (user) navigate("/");
   }, [user, navigate]);
