@@ -47,6 +47,12 @@ export const Prefs = {
     return { liked: mine.has(targetId), count: nextCount };
   },
   getLikes: (targetId: string) => parseInt(localStorage.getItem(K.likes(targetId)) || "0", 10),
+
+  getAge: (uid: string) => {
+    const v = parseInt(localStorage.getItem(K.age(uid)) || "0", 10);
+    return Number.isFinite(v) && v > 0 ? v : 0;
+  },
+  setAge: (uid: string, age: number) => localStorage.setItem(K.age(uid), String(age)),
 };
 
 export function tierFromLikes(n: number): { label: string; emoji: string; color: string } {
