@@ -77,6 +77,9 @@ export function UserCard({ userId, onClose, onPrivateMessage }: Props) {
   if (!profile) return null;
   const isMe = user?.id === profile.id;
   const tier = tierFromLikes(likes);
+  const age = isMe
+    ? ((user?.user_metadata as any)?.age || Prefs.getAge(profile.id) || 0)
+    : (Prefs.getAge(profile.id) || 0);
 
   return (
     <Dialog open={!!userId} onOpenChange={(o) => !o && onClose()}>
@@ -96,6 +99,11 @@ export function UserCard({ userId, onClose, onPrivateMessage }: Props) {
               <span className="text-xs px-2 py-0.5 rounded-full bg-secondary">
                 {profile.gender === "male" ? "ذكر" : profile.gender === "female" ? "أنثى" : "غير محدد"}
               </span>
+              {age > 0 && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-semibold">
+                  {age} سنة
+                </span>
+              )}
               <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ background: `${tier.color}22`, color: tier.color }}>
                 {tier.emoji} {tier.label}
               </span>
