@@ -118,6 +118,10 @@ export default function AuthPage() {
                   <Label>كلمة المرور</Label>
                   <Input type="password" value={loginPass} onChange={(e) => setLoginPass(e.target.value)} required />
                 </div>
+                <div className="space-y-2">
+                  <Label>العمر <span className="text-xs text-muted-foreground">(اختياري)</span></Label>
+                  <Input type="number" min={8} max={120} value={loginAge} onChange={(e) => setLoginAge(e.target.value)} placeholder="مثال: 25" />
+                </div>
                 <Button type="submit" className="w-full gradient-primary border-0 shadow-glow" disabled={loading}>
                   {loading ? "جارٍ الدخول..." : "دخول"}
                 </Button>
