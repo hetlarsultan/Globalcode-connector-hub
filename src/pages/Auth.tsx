@@ -173,12 +173,37 @@ export default function AuthPage() {
               <Separator />
               <span className="absolute inset-0 -top-2.5 mx-auto w-fit bg-card px-2 text-xs text-muted-foreground">أو</span>
             </div>
-            <Button type="button" variant="outline" className="w-full gap-2" disabled={loading} onClick={handleGuest}>
+            <Button type="button" variant="outline" className="w-full gap-2" disabled={loading} onClick={() => { setGuestName(""); setGuestOpen(true); }}>
               <UserRound className="h-4 w-4" /> دخول كزائر
             </Button>
           </div>
         </Card>
       </div>
+
+      <Dialog open={guestOpen} onOpenChange={setGuestOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>الدخول كزائر</DialogTitle>
+            <DialogDescription>أدخل الاسم المعروض الذي سيظهر للآخرين</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label>الاسم المعروض</Label>
+            <Input
+              value={guestName}
+              onChange={(e) => setGuestName(e.target.value)}
+              placeholder="اسمك في الدردشة"
+              autoFocus
+              onKeyDown={(e) => e.key === "Enter" && submitGuest()}
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setGuestOpen(false)} disabled={loading}>إلغاء</Button>
+            <Button onClick={submitGuest} disabled={loading} className="gradient-primary border-0">
+              {loading ? "جارٍ الدخول..." : "دخول"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
