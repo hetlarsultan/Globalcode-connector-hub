@@ -62,13 +62,17 @@ export default function AuthPage() {
     if (!uname) uname = randomUsername();
     if (uname.length < 3) return toast.error("اسم المستخدم قصير جداً (٣ أحرف على الأقل)");
     if (password.length < 6) return toast.error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+    const ageNum = parseInt(signupAge, 10);
+    if (!Number.isFinite(ageNum) || ageNum < 8 || ageNum > 120)
+      return toast.error("الرجاء إدخال عمر صحيح");
     setLoading(true);
-    const { error } = await signUpWithUsername(uname, password, displayName || uname, gender);
+    const { data, error } = await signUpWithUsername(uname, password, displayName || uname, gender, ageNum);
     setLoading(false);
     if (error) {
       if (error.message.includes("already")) toast.error("اسم المستخدم مسجّل مسبقاً");
       else toast.error(error.message);
     } else {
+      if (data.user) Prefs.setAge(data.user.id, ageNum);
       toast.success("تم إنشاء الحساب بنجاح!");
       navigate("/");
     }
