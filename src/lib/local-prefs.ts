@@ -8,6 +8,7 @@ const K = {
   blocks: (uid: string) => `pref:blocks:${uid}`,
   likes: (targetId: string) => `pref:likes:${targetId}`,
   likedBy: (uid: string) => `pref:likedBy:${uid}`,
+  age: (uid: string) => `pref:age:${uid}`,
 };
 
 export const Prefs = {
