@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { MessageCircle, Sparkles, UserRound } from "lucide-react";
 import { signInWithUsername, signUpWithUsername } from "@/lib/auth-helpers";
@@ -35,6 +36,10 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [signupAge, setSignupAge] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "unspecified">("unspecified");
+
+  // guest dialog
+  const [guestOpen, setGuestOpen] = useState(false);
+  const [guestName, setGuestName] = useState("");
 
   useEffect(() => {
     if (user) navigate("/");
@@ -78,14 +83,16 @@ export default function AuthPage() {
     }
   };
 
-  const handleGuest = async () => {
+  const submitGuest = async () => {
+    const name = guestName.trim();
+    if (name.length < 2) return toast.error("الرجاء إدخال اسم معروض (حرفان على الأقل)");
     setLoading(true);
     const uname = randomUsername();
     const pass = `${uname}_${Math.random().toString(36).slice(2, 10)}`;
-    const { error } = await signUpWithUsername(uname, pass, `زائر-${uname.slice(-4)}`, "unspecified");
+    const { error } = await signUpWithUsername(uname, pass, name, "unspecified");
     setLoading(false);
     if (error) toast.error("تعذّر الدخول كزائر، حاول مجدداً");
-    else { toast.success("مرحباً أيها الزائر!"); navigate("/"); }
+    else { setGuestOpen(false); toast.success(`مرحباً ${name}!`); navigate("/"); }
   };
 
   return (
@@ -166,12 +173,37 @@ export default function AuthPage() {
               <Separator />
               <span className="absolute inset-0 -top-2.5 mx-auto w-fit bg-card px-2 text-xs text-muted-foreground">أو</span>
             </div>
-            <Button type="button" variant="outline" className="w-full gap-2" disabled={loading} onClick={handleGuest}>
+            <Button type="button" variant="outline" className="w-full gap-2" disabled={loading} onClick={() => { setGuestName(""); setGuestOpen(true); }}>
               <UserRound className="h-4 w-4" /> دخول كزائر
             </Button>
           </div>
         </Card>
       </div>
+
+      <Dialog open={guestOpen} onOpenChange={setGuestOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>الدخول كزائر</DialogTitle>
+            <DialogDescription>أدخل الاسم المعروض الذي سيظهر للآخرين</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <Label>الاسم المعروض</Label>
+            <Input
+              value={guestName}
+              onChange={(e) => setGuestName(e.target.value)}
+              placeholder="اسمك في الدردشة"
+              autoFocus
+              onKeyDown={(e) => e.key === "Enter" && submitGuest()}
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setGuestOpen(false)} disabled={loading}>إلغاء</Button>
+            <Button onClick={submitGuest} disabled={loading} className="gradient-primary border-0">
+              {loading ? "جارٍ الدخول..." : "دخول"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

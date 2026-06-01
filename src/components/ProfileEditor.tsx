@@ -26,6 +26,7 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
   const [textColor, setTextColor] = useState("");
   const [fontFamily, setFontFamily] = useState("");
   const [likes, setLikes] = useState(0);
+  const [age, setAge] = useState<string>("");
 
   useEffect(() => {
     if (profile) {
@@ -39,6 +40,10 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
       setTextColor(Prefs.getTextColor(user.id));
       setFontFamily(Prefs.getFontFamily(user.id));
       setLikes(Prefs.getLikes(user.id));
+      const metaAge = (user.user_metadata as any)?.age;
+      const local = Prefs.getAge(user.id);
+      const val = metaAge || local || 0;
+      setAge(val ? String(val) : "");
     }
   }, [profile, user]);
 
@@ -64,12 +69,21 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
 
   const save = async () => {
     if (!profile || !user) return;
+    const ageNum = parseInt(age, 10);
+    if (age && (!Number.isFinite(ageNum) || ageNum < 8 || ageNum > 120)) {
+      toast.error("الرجاء إدخال عمر صحيح (8 - 120)");
+      return;
+    }
     setSaving(true);
     await supabase.from("profiles").update({ display_name: displayName, bio }).eq("id", profile.id);
     Prefs.setSound(user.id, sound);
     Prefs.setNameColor(user.id, nameColor);
     Prefs.setTextColor(user.id, textColor);
     Prefs.setFontFamily(user.id, fontFamily);
+    if (ageNum) {
+      Prefs.setAge(user.id, ageNum);
+      await supabase.auth.updateUser({ data: { ...(user.user_metadata || {}), age: ageNum } });
+    }
     await refreshProfile();
     setSaving(false);
     toast.success("تم الحفظ");
@@ -110,6 +124,10 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
       <div className="space-y-2">
         <Label>النبذة</Label>
         <Textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} />
+      </div>
+      <div className="space-y-2">
+        <Label>العمر</Label>
+        <Input type="number" min={8} max={120} value={age} onChange={(e) => setAge(e.target.value)} placeholder="مثال: 25" />
       </div>
 
       <div className="space-y-2">
