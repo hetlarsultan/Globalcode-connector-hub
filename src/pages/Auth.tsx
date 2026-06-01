@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { MessageCircle, Sparkles, UserRound } from "lucide-react";
 import { signInWithUsername, signUpWithUsername } from "@/lib/auth-helpers";
+import { Prefs } from "@/lib/local-prefs";
 import { useAuth } from "@/hooks/useAuth";
 
 // Sanitize username to letters/digits/underscore only (safe for our email mapping)
