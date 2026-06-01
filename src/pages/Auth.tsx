@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { MessageCircle, Sparkles, UserRound } from "lucide-react";
 import { signInWithUsername, signUpWithUsername } from "@/lib/auth-helpers";
+import { Prefs } from "@/lib/local-prefs";
 import { useAuth } from "@/hooks/useAuth";
 
 // Sanitize username to letters/digits/underscore only (safe for our email mapping)
@@ -26,11 +27,13 @@ export default function AuthPage() {
   // login
   const [loginUser, setLoginUser] = useState("");
   const [loginPass, setLoginPass] = useState("");
+  const [loginAge, setLoginAge] = useState("");
 
   // signup
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
+  const [signupAge, setSignupAge] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "unspecified">("unspecified");
 
   useEffect(() => {
@@ -39,11 +42,18 @@ export default function AuthPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    const ageNum = parseInt(loginAge, 10);
+    if (loginAge && (!Number.isFinite(ageNum) || ageNum < 8 || ageNum > 120))
+      return toast.error("الرجاء إدخال عمر صحيح");
     setLoading(true);
-    const { error } = await signInWithUsername(loginUser, loginPass);
+    const { data, error } = await signInWithUsername(loginUser, loginPass);
     setLoading(false);
     if (error) toast.error("اسم المستخدم أو كلمة المرور غير صحيحة");
-    else { toast.success("مرحباً بعودتك!"); navigate("/"); }
+    else {
+      if (data.user && ageNum) Prefs.setAge(data.user.id, ageNum);
+      toast.success("مرحباً بعودتك!");
+      navigate("/");
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -52,13 +62,17 @@ export default function AuthPage() {
     if (!uname) uname = randomUsername();
     if (uname.length < 3) return toast.error("اسم المستخدم قصير جداً (٣ أحرف على الأقل)");
     if (password.length < 6) return toast.error("كلمة المرور يجب أن تكون 6 أحرف على الأقل");
+    const ageNum = parseInt(signupAge, 10);
+    if (!Number.isFinite(ageNum) || ageNum < 8 || ageNum > 120)
+      return toast.error("الرجاء إدخال عمر صحيح");
     setLoading(true);
-    const { error } = await signUpWithUsername(uname, password, displayName || uname, gender);
+    const { data, error } = await signUpWithUsername(uname, password, displayName || uname, gender, ageNum);
     setLoading(false);
     if (error) {
       if (error.message.includes("already")) toast.error("اسم المستخدم مسجّل مسبقاً");
       else toast.error(error.message);
     } else {
+      if (data.user) Prefs.setAge(data.user.id, ageNum);
       toast.success("تم إنشاء الحساب بنجاح!");
       navigate("/");
     }
@@ -104,6 +118,10 @@ export default function AuthPage() {
                   <Label>كلمة المرور</Label>
                   <Input type="password" value={loginPass} onChange={(e) => setLoginPass(e.target.value)} required />
                 </div>
+                <div className="space-y-2">
+                  <Label>العمر <span className="text-xs text-muted-foreground">(اختياري)</span></Label>
+                  <Input type="number" min={8} max={120} value={loginAge} onChange={(e) => setLoginAge(e.target.value)} placeholder="مثال: 25" />
+                </div>
                 <Button type="submit" className="w-full gradient-primary border-0 shadow-glow" disabled={loading}>
                   {loading ? "جارٍ الدخول..." : "دخول"}
                 </Button>
@@ -123,6 +141,10 @@ export default function AuthPage() {
                 <div className="space-y-2">
                   <Label>كلمة المرور</Label>
                   <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                </div>
+                <div className="space-y-2">
+                  <Label>العمر</Label>
+                  <Input type="number" min={8} max={120} value={signupAge} onChange={(e) => setSignupAge(e.target.value)} placeholder="مثال: 25" required />
                 </div>
                 <div className="space-y-2">
                   <Label>الجنس</Label>

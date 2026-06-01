@@ -9,6 +9,7 @@ export async function signUpWithUsername(
   password: string,
   displayName: string,
   gender: "male" | "female" | "unspecified",
+  age?: number,
 ) {
   const email = usernameToEmail(username);
   return supabase.auth.signUp({
@@ -16,7 +17,7 @@ export async function signUpWithUsername(
     password,
     options: {
       emailRedirectTo: `${window.location.origin}/`,
-      data: { username, display_name: displayName, gender },
+      data: { username, display_name: displayName, gender, age: age ?? null },
     },
   });
 }
