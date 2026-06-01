@@ -83,14 +83,16 @@ export default function AuthPage() {
     }
   };
 
-  const handleGuest = async () => {
+  const submitGuest = async () => {
+    const name = guestName.trim();
+    if (name.length < 2) return toast.error("الرجاء إدخال اسم معروض (حرفان على الأقل)");
     setLoading(true);
     const uname = randomUsername();
     const pass = `${uname}_${Math.random().toString(36).slice(2, 10)}`;
-    const { error } = await signUpWithUsername(uname, pass, `زائر-${uname.slice(-4)}`, "unspecified");
+    const { error } = await signUpWithUsername(uname, pass, name, "unspecified");
     setLoading(false);
     if (error) toast.error("تعذّر الدخول كزائر، حاول مجدداً");
-    else { toast.success("مرحباً أيها الزائر!"); navigate("/"); }
+    else { setGuestOpen(false); toast.success(`مرحباً ${name}!`); navigate("/"); }
   };
 
   return (
