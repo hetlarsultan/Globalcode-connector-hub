@@ -69,12 +69,21 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
 
   const save = async () => {
     if (!profile || !user) return;
+    const ageNum = parseInt(age, 10);
+    if (age && (!Number.isFinite(ageNum) || ageNum < 8 || ageNum > 120)) {
+      toast.error("الرجاء إدخال عمر صحيح (8 - 120)");
+      return;
+    }
     setSaving(true);
     await supabase.from("profiles").update({ display_name: displayName, bio }).eq("id", profile.id);
     Prefs.setSound(user.id, sound);
     Prefs.setNameColor(user.id, nameColor);
     Prefs.setTextColor(user.id, textColor);
     Prefs.setFontFamily(user.id, fontFamily);
+    if (ageNum) {
+      Prefs.setAge(user.id, ageNum);
+      await supabase.auth.updateUser({ data: { ...(user.user_metadata || {}), age: ageNum } });
+    }
     await refreshProfile();
     setSaving(false);
     toast.success("تم الحفظ");
