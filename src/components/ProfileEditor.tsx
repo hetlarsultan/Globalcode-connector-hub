@@ -26,6 +26,7 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
   const [textColor, setTextColor] = useState("");
   const [fontFamily, setFontFamily] = useState("");
   const [likes, setLikes] = useState(0);
+  const [age, setAge] = useState<string>("");
 
   useEffect(() => {
     if (profile) {
@@ -39,6 +40,10 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
       setTextColor(Prefs.getTextColor(user.id));
       setFontFamily(Prefs.getFontFamily(user.id));
       setLikes(Prefs.getLikes(user.id));
+      const metaAge = (user.user_metadata as any)?.age;
+      const local = Prefs.getAge(user.id);
+      const val = metaAge || local || 0;
+      setAge(val ? String(val) : "");
     }
   }, [profile, user]);
 
