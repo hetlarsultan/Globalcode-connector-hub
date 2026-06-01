@@ -27,11 +27,13 @@ export default function AuthPage() {
   // login
   const [loginUser, setLoginUser] = useState("");
   const [loginPass, setLoginPass] = useState("");
+  const [loginAge, setLoginAge] = useState("");
 
   // signup
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
+  const [signupAge, setSignupAge] = useState("");
   const [gender, setGender] = useState<"male" | "female" | "unspecified">("unspecified");
 
   useEffect(() => {
