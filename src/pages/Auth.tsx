@@ -143,6 +143,10 @@ export default function AuthPage() {
                   <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
                 </div>
                 <div className="space-y-2">
+                  <Label>العمر</Label>
+                  <Input type="number" min={8} max={120} value={signupAge} onChange={(e) => setSignupAge(e.target.value)} placeholder="مثال: 25" required />
+                </div>
+                <div className="space-y-2">
                   <Label>الجنس</Label>
                   <RadioGroup value={gender} onValueChange={(v) => setGender(v as any)} className="flex gap-4">
                     <div className="flex items-center gap-2"><RadioGroupItem value="male" id="m" /><Label htmlFor="m">ذكر</Label></div>
