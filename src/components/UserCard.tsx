@@ -78,9 +78,7 @@ export function UserCard({ userId, onClose, onPrivateMessage }: Props) {
   if (!profile) return null;
   const isMe = user?.id === profile.id;
   const tier = tierFromLikes(likes);
-  const age = isMe
-    ? ((user?.user_metadata as any)?.age || Prefs.getAge(profile.id) || 0)
-    : (Prefs.getAge(profile.id) || 0);
+  const age = profile.age || (isMe ? ((user?.user_metadata as any)?.age || Prefs.getAge(profile.id)) : Prefs.getAge(profile.id)) || 0;
 
   return (
     <Dialog open={!!userId} onOpenChange={(o) => !o && onClose()}>
