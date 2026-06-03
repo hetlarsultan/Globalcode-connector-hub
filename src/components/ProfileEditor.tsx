@@ -40,12 +40,15 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
       setTextColor(Prefs.getTextColor(user.id));
       setFontFamily(Prefs.getFontFamily(user.id));
       setLikes(Prefs.getLikes(user.id));
+      const dbAge = (profile as any)?.age;
       const metaAge = (user.user_metadata as any)?.age;
       const local = Prefs.getAge(user.id);
-      const val = metaAge || local || 0;
+      const val = dbAge || metaAge || local || 0;
       setAge(val ? String(val) : "");
     }
   }, [profile, user]);
+
+  const isGuest = !!profile?.username?.startsWith("guest_");
 
   const upload = async (file: File) => {
     if (!profile) return;
@@ -70,17 +73,21 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
   const save = async () => {
     if (!profile || !user) return;
     const ageNum = parseInt(age, 10);
-    if (age && (!Number.isFinite(ageNum) || ageNum < 8 || ageNum > 120)) {
-      toast.error("الرجاء إدخال عمر صحيح (8 - 120)");
-      return;
+    if (!isGuest && age) {
+      if (!Number.isFinite(ageNum) || ageNum < 8 || ageNum > 120) {
+        toast.error("الرجاء إدخال عمر صحيح بين 8 و 120");
+        return;
+      }
     }
     setSaving(true);
-    await supabase.from("profiles").update({ display_name: displayName, bio }).eq("id", profile.id);
+    const updates: any = { display_name: displayName, bio };
+    if (!isGuest && ageNum) updates.age = ageNum;
+    await supabase.from("profiles").update(updates).eq("id", profile.id);
     Prefs.setSound(user.id, sound);
     Prefs.setNameColor(user.id, nameColor);
     Prefs.setTextColor(user.id, textColor);
     Prefs.setFontFamily(user.id, fontFamily);
-    if (ageNum) {
+    if (!isGuest && ageNum) {
       Prefs.setAge(user.id, ageNum);
       await supabase.auth.updateUser({ data: { ...(user.user_metadata || {}), age: ageNum } });
     }
@@ -125,10 +132,13 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
         <Label>النبذة</Label>
         <Textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} />
       </div>
-      <div className="space-y-2">
-        <Label>العمر</Label>
-        <Input type="number" min={8} max={120} value={age} onChange={(e) => setAge(e.target.value)} placeholder="مثال: 25" />
-      </div>
+      {!isGuest && (
+        <div className="space-y-2">
+          <Label>العمر</Label>
+          <Input type="number" min={8} max={120} value={age} onChange={(e) => setAge(e.target.value)} placeholder="مثال: 25" />
+        </div>
+      )}
+
 
       <div className="space-y-2">
         <Label className="flex items-center gap-2"><span>لون الاسم</span></Label>
