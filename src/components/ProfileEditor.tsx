@@ -132,10 +132,13 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
         <Label>النبذة</Label>
         <Textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={3} />
       </div>
-      <div className="space-y-2">
-        <Label>العمر</Label>
-        <Input type="number" min={8} max={120} value={age} onChange={(e) => setAge(e.target.value)} placeholder="مثال: 25" />
-      </div>
+      {!isGuest && (
+        <div className="space-y-2">
+          <Label>العمر</Label>
+          <Input type="number" min={8} max={120} value={age} onChange={(e) => setAge(e.target.value)} placeholder="مثال: 25" />
+        </div>
+      )}
+
 
       <div className="space-y-2">
         <Label className="flex items-center gap-2"><span>لون الاسم</span></Label>
