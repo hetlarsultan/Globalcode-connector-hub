@@ -40,12 +40,15 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
       setTextColor(Prefs.getTextColor(user.id));
       setFontFamily(Prefs.getFontFamily(user.id));
       setLikes(Prefs.getLikes(user.id));
+      const dbAge = (profile as any)?.age;
       const metaAge = (user.user_metadata as any)?.age;
       const local = Prefs.getAge(user.id);
-      const val = metaAge || local || 0;
+      const val = dbAge || metaAge || local || 0;
       setAge(val ? String(val) : "");
     }
   }, [profile, user]);
+
+  const isGuest = !!profile?.username?.startsWith("guest_");
 
   const upload = async (file: File) => {
     if (!profile) return;
