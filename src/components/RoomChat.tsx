@@ -243,13 +243,13 @@ export function RoomChat({ roomId, roomName, onAvatarClick }: Props) {
       {replyTo && (
         <div className="px-3 py-2 bg-accent/50 border-t flex items-center justify-between text-xs">
           <span>الرد على <strong>{replyTo.profile?.display_name}</strong>: {replyTo.content.slice(0, 40)}</span>
-          <button onClick={() => setReplyTo(null)}><X className="h-4 w-4" /></button>
+          <button onClick={() => setReplyTo(null)} aria-label="إلغاء الرد"><X className="h-4 w-4" /></button>
         </div>
       )}
 
       <form onSubmit={(e) => { e.preventDefault(); send(); }} className="p-3 border-t bg-card/80 backdrop-blur-sm flex gap-2">
         <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0])} />
-        <Button type="button" variant="ghost" size="icon" onClick={() => fileRef.current?.click()}>
+        <Button type="button" variant="ghost" size="icon" onClick={() => fileRef.current?.click()} aria-label="رفع صورة">
           <ImageIcon className="h-5 w-5" />
         </Button>
         <Input
@@ -259,7 +259,7 @@ export function RoomChat({ roomId, roomName, onAvatarClick }: Props) {
           className="flex-1"
           style={user && Prefs.getFontFamily(user.id) ? { fontFamily: Prefs.getFontFamily(user.id) } : undefined}
         />
-        <Button type="submit" size="icon" disabled={sending || !input.trim()} className="gradient-primary border-0">
+        <Button type="submit" size="icon" disabled={sending || !input.trim()} className="gradient-primary border-0" aria-label="إرسال الرسالة">
           <Send className="h-4 w-4" />
         </Button>
       </form>
