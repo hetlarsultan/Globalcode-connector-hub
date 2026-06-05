@@ -126,13 +126,22 @@ export default function Index() {
 
   return (
     <div className="h-screen flex bg-background overflow-hidden">
+      <Helmet>
+        <title>دردشة عربية — غرف ورسائل ومكالمات مباشرة</title>
+        <meta name="description" content="انضم لمجتمع الدردشة العربي: غرف عامة، رسائل خاصة، ومكالمات صوت وفيديو مجانية." />
+        <link rel="canonical" href="https://script-pair-spark.lovable.app/" />
+        <meta property="og:title" content="دردشة عربية — غرف ورسائل ومكالمات مباشرة" />
+        <meta property="og:description" content="غرف عامة، رسائل خاصة، ومكالمات صوت وفيديو مجانية." />
+        <meta property="og:url" content="https://script-pair-spark.lovable.app/" />
+      </Helmet>
+      <h1 className="sr-only">دردشة عربية — مجتمع الدردشة العربي المباشر</h1>
       {/* Desktop sidebar */}
       <aside className="hidden md:block w-80 shrink-0">{Sidebar}</aside>
 
       {/* Mobile header */}
       <div className="md:hidden absolute top-0 inset-x-0 z-30 h-14 bg-card/90 backdrop-blur-sm border-b flex items-center justify-between px-3">
         <Sheet>
-          <SheetTrigger asChild><Button variant="ghost" size="icon"><Menu className="h-5 w-5" />{unreadTotal > 0 && <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />}</Button></SheetTrigger>
+          <SheetTrigger asChild><Button variant="ghost" size="icon" aria-label="فتح القائمة"><Menu className="h-5 w-5" />{unreadTotal > 0 && <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-destructive" />}</Button></SheetTrigger>
           <SheetContent side="right" className="p-0 w-80">{Sidebar}</SheetContent>
         </Sheet>
         <div className="font-semibold">{activeRoom?.name || activePrivate?.display_name || "دردشة"}</div>
