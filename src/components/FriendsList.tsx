@@ -37,8 +37,9 @@ export function FriendsList({ onOpenChat }: Props) {
 
   useEffect(() => {
     load();
-    const ch = supabase.channel("friendships").on("postgres_changes",
-      { event: "*", schema: "public", table: "friendships" }, load).subscribe();
+    const ch = supabase.channel(`friendships-${user?.id || "anon"}-${Math.random().toString(36).slice(2, 8)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, load)
+      .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user]);
 
