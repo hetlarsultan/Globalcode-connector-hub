@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -97,12 +98,20 @@ export default function AuthPage() {
 
   return (
     <div className="min-h-screen gradient-hero flex items-center justify-center p-4">
+      <Helmet>
+        <title>تسجيل الدخول — دردشة عربية</title>
+        <meta name="description" content="سجّل الدخول أو أنشئ حساباً جديداً للانضمام إلى غرف الدردشة العربية والرسائل الخاصة والمكالمات." />
+        <link rel="canonical" href="https://script-pair-spark.lovable.app/auth" />
+        <meta property="og:title" content="تسجيل الدخول — دردشة عربية" />
+        <meta property="og:description" content="سجّل الدخول للانضمام إلى مجتمع الدردشة العربي." />
+        <meta property="og:url" content="https://script-pair-spark.lovable.app/auth" />
+      </Helmet>
       <div className="w-full max-w-md animate-in-slide">
         <div className="text-center mb-8">
           <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl gradient-primary shadow-glow mb-4">
             <MessageCircle className="h-8 w-8 text-primary-foreground" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">دردشة</h1>
+          <h1 className="text-3xl font-bold tracking-tight">دردشة عربية — تسجيل الدخول</h1>
           <p className="text-muted-foreground mt-2 flex items-center justify-center gap-1.5">
             <Sparkles className="h-4 w-4" /> مجتمع الدردشة العربي
           </p>
