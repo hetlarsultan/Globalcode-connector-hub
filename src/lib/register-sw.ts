@@ -1,5 +1,6 @@
-// Guarded service worker registration.
-// Only registers in production, top-level, on real domains (not Lovable preview).
+// Guarded service worker registration with update prompt.
+import { toast } from "sonner";
+
 export function registerServiceWorker() {
   if (typeof window === "undefined") return;
   if (!("serviceWorker" in navigator)) return;
@@ -31,6 +32,43 @@ export function registerServiceWorker() {
   }
 
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => {});
+    navigator.serviceWorker.register("/sw.js").then((reg) => {
+      // Check for updates periodically
+      setInterval(() => { reg.update().catch(() => {}); }, 60 * 60 * 1000);
+
+      const promptUpdate = (worker: ServiceWorker) => {
+        toast("نسخة جديدة من التطبيق متاحة", {
+          description: "اضغط للتحديث الآن",
+          duration: Infinity,
+          action: {
+            label: "تحديث",
+            onClick: () => {
+              worker.postMessage({ type: "SKIP_WAITING" });
+              setTimeout(() => window.location.reload(), 300);
+            },
+          },
+        });
+      };
+
+      // Already waiting on load
+      if (reg.waiting) promptUpdate(reg.waiting);
+
+      reg.addEventListener("updatefound", () => {
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener("statechange", () => {
+          if (nw.state === "installed" && navigator.serviceWorker.controller) {
+            promptUpdate(nw);
+          }
+        });
+      });
+    }).catch(() => {});
+
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
   });
 }
