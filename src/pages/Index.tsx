@@ -80,15 +80,15 @@ export default function Index() {
           <div className="font-semibold truncate">{profile.display_name}</div>
           <div className="text-xs text-muted-foreground">@{profile.username}</div>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => setShowProfile(true)}><UserCog className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="icon" onClick={() => setShowProfile(true)} aria-label="فتح الملف الشخصي"><UserCog className="h-4 w-4" /></Button>
       </div>
 
       <Tabs value={sidebarTab} onValueChange={setSidebarTab} className="flex-1 flex flex-col min-h-0">
         <TabsList className="grid grid-cols-4 mx-2 mt-2">
-          <TabsTrigger value="rooms"><Hash className="h-4 w-4" /></TabsTrigger>
-          <TabsTrigger value="users"><Users className="h-4 w-4" /></TabsTrigger>
-          <TabsTrigger value="friends"><UserCog className="h-4 w-4" /></TabsTrigger>
-          <TabsTrigger value="pm" className="relative">
+          <TabsTrigger value="rooms" aria-label="الغرف"><Hash className="h-4 w-4" /></TabsTrigger>
+          <TabsTrigger value="users" aria-label="المستخدمون"><Users className="h-4 w-4" /></TabsTrigger>
+          <TabsTrigger value="friends" aria-label="الأصدقاء"><UserCog className="h-4 w-4" /></TabsTrigger>
+          <TabsTrigger value="pm" className="relative" aria-label="الرسائل الخاصة">
             <MessageCircle className="h-4 w-4" />
             {unreadTotal > 0 && (
               <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
