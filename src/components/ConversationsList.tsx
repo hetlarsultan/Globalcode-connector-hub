@@ -49,8 +49,9 @@ export function ConversationsList({ onOpenChat }: Props) {
 
   useEffect(() => {
     load();
-    const ch = supabase.channel("pm-list").on("postgres_changes",
-      { event: "*", schema: "public", table: "private_messages" }, load).subscribe();
+    const ch = supabase.channel(`pm-list-${user?.id || "anon"}-${Math.random().toString(36).slice(2, 8)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "private_messages" }, load)
+      .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user]);
 

@@ -36,7 +36,7 @@ export function UsersList({ onUserClick }: Props) {
       setUsers(merged as any);
     })();
 
-    const ch = supabase.channel("profiles-list")
+    const ch = supabase.channel(`profiles-list-${Math.random().toString(36).slice(2, 8)}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => {
         supabase.from("profiles").select("*").then(({ data }) => {
           if (data) setUsers((prev) => prev.map((u) => {
