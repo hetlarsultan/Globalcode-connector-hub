@@ -24,8 +24,8 @@ export default defineConfig(({ mode }) => ({
     {
       name: "emit-version-json",
       apply: "build" as const,
-      generateBundle() {
-        this.emitFile({
+      generateBundle(this: any) {
+        (this as any).emitFile({
           type: "asset",
           fileName: "version.json",
           source: JSON.stringify({ version: APP_VERSION, builtAt: new Date().toISOString() }),
