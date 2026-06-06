@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { Camera, LogOut, Trash2, Heart, Volume2 } from "lucide-react";
 import { COLOR_CHOICES, FONT_CHOICES, Prefs, tierFromLikes } from "@/lib/local-prefs";
 import { cn } from "@/lib/utils";
+import { DataUsagePanel } from "./DataUsagePanel";
+import { APP_VERSION } from "@/lib/register-sw";
 
 export function ProfileEditor({ onClose }: { onClose: () => void }) {
   const { profile, refreshProfile, signOut, user } = useAuth();
