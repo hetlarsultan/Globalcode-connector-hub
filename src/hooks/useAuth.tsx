@@ -10,6 +10,9 @@ interface Profile {
   bio: string | null;
   gender: "male" | "female" | "unspecified";
   age?: number | null;
+  name_color?: string | null;
+  text_color?: string | null;
+  font_family?: string | null;
 }
 
 interface AuthContextType {

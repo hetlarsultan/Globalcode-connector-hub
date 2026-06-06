@@ -1,5 +1,19 @@
-// Guarded service worker registration with update prompt.
-import { toast } from "sonner";
+// Guarded service worker registration with version-aware update dialog.
+import { setPendingUpdate } from "./pwa-update";
+
+export const APP_VERSION: string =
+  typeof __APP_VERSION__ !== "undefined" ? __APP_VERSION__ : "dev";
+
+async function fetchRemoteVersion(): Promise<string> {
+  try {
+    const res = await fetch(`/version.json?t=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) return "new";
+    const json = await res.json();
+    return json.version || "new";
+  } catch {
+    return "new";
+  }
+}
 
 export function registerServiceWorker() {
   if (typeof window === "undefined") return;
@@ -33,24 +47,20 @@ export function registerServiceWorker() {
 
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").then((reg) => {
-      // Check for updates periodically
       setInterval(() => { reg.update().catch(() => {}); }, 60 * 60 * 1000);
 
-      const promptUpdate = (worker: ServiceWorker) => {
-        toast("نسخة جديدة من التطبيق متاحة", {
-          description: "اضغط للتحديث الآن",
-          duration: Infinity,
-          action: {
-            label: "تحديث",
-            onClick: () => {
-              worker.postMessage({ type: "SKIP_WAITING" });
-              setTimeout(() => window.location.reload(), 300);
-            },
+      const promptUpdate = async (worker: ServiceWorker) => {
+        const next = await fetchRemoteVersion();
+        setPendingUpdate({
+          current: APP_VERSION,
+          next,
+          activate: () => {
+            worker.postMessage({ type: "SKIP_WAITING" });
+            // controllerchange listener below will reload.
           },
         });
       };
 
-      // Already waiting on load
       if (reg.waiting) promptUpdate(reg.waiting);
 
       reg.addEventListener("updatefound", () => {

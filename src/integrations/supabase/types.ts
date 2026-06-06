@@ -147,10 +147,13 @@ export type Database = {
           bio: string | null
           created_at: string
           display_name: string
+          font_family: string | null
           gender: Database["public"]["Enums"]["user_gender"]
           id: string
           is_online: boolean
           last_seen: string
+          name_color: string | null
+          text_color: string | null
           updated_at: string
           username: string
         }
@@ -160,10 +163,13 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name: string
+          font_family?: string | null
           gender?: Database["public"]["Enums"]["user_gender"]
           id: string
           is_online?: boolean
           last_seen?: string
+          name_color?: string | null
+          text_color?: string | null
           updated_at?: string
           username: string
         }
@@ -173,10 +179,13 @@ export type Database = {
           bio?: string | null
           created_at?: string
           display_name?: string
+          font_family?: string | null
           gender?: Database["public"]["Enums"]["user_gender"]
           id?: string
           is_online?: boolean
           last_seen?: string
+          name_color?: string | null
+          text_color?: string | null
           updated_at?: string
           username?: string
         }

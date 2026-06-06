@@ -4,8 +4,13 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
+const APP_VERSION = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 12);
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  define: {
+    __APP_VERSION__: JSON.stringify(APP_VERSION),
+  },
   server: {
     host: "::",
     port: 8080,
@@ -16,6 +21,17 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
+    ({
+      name: "emit-version-json",
+      apply: "build",
+      generateBundle() {
+        (this as any).emitFile({
+          type: "asset",
+          fileName: "version.json",
+          source: JSON.stringify({ version: APP_VERSION, builtAt: new Date().toISOString() }),
+        });
+      },
+    } as any),
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: null,

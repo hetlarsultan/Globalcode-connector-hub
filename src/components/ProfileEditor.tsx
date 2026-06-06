@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { Camera, LogOut, Trash2, Heart, Volume2 } from "lucide-react";
 import { COLOR_CHOICES, FONT_CHOICES, Prefs, tierFromLikes } from "@/lib/local-prefs";
 import { cn } from "@/lib/utils";
+import { DataUsagePanel } from "./DataUsagePanel";
+import { APP_VERSION } from "@/lib/register-sw";
 
 export function ProfileEditor({ onClose }: { onClose: () => void }) {
   const { profile, refreshProfile, signOut, user } = useAuth();
@@ -33,12 +35,12 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
       setDisplayName(profile.display_name);
       setBio(profile.bio || "");
       setAvatarUrl(profile.avatar_url || "");
+      setNameColor(profile.name_color || "");
+      setTextColor(profile.text_color || "");
+      setFontFamily(profile.font_family || "");
     }
     if (user) {
       setSound(Prefs.getSound(user.id));
-      setNameColor(Prefs.getNameColor(user.id));
-      setTextColor(Prefs.getTextColor(user.id));
-      setFontFamily(Prefs.getFontFamily(user.id));
       setLikes(Prefs.getLikes(user.id));
       const dbAge = (profile as any)?.age;
       const metaAge = (user.user_metadata as any)?.age;
@@ -80,13 +82,16 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
       }
     }
     setSaving(true);
-    const updates: any = { display_name: displayName, bio };
+    const updates: any = {
+      display_name: displayName,
+      bio,
+      name_color: nameColor || null,
+      text_color: textColor || null,
+      font_family: fontFamily || null,
+    };
     if (!isGuest && ageNum) updates.age = ageNum;
     await supabase.from("profiles").update(updates).eq("id", profile.id);
     Prefs.setSound(user.id, sound);
-    Prefs.setNameColor(user.id, nameColor);
-    Prefs.setTextColor(user.id, textColor);
-    Prefs.setFontFamily(user.id, fontFamily);
     if (!isGuest && ageNum) {
       Prefs.setAge(user.id, ageNum);
       await supabase.auth.updateUser({ data: { ...(user.user_metadata || {}), age: ageNum } });
@@ -183,6 +188,12 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
         <Label className="flex items-center gap-2 cursor-pointer"><Volume2 className="h-4 w-4" /> إشعارات صوتية</Label>
         <Switch checked={sound} onCheckedChange={setSound} />
       </div>
+
+      <DataUsagePanel />
+
+      <p className="text-center text-[10px] text-muted-foreground">إصدار التطبيق: {APP_VERSION}</p>
+
+
 
       <div className="flex gap-2 pt-2">
         <Button onClick={save} disabled={saving} className="flex-1 gradient-primary border-0 shadow-glow">حفظ</Button>
