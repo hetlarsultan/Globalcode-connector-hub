@@ -80,13 +80,16 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
       }
     }
     setSaving(true);
-    const updates: any = { display_name: displayName, bio };
+    const updates: any = {
+      display_name: displayName,
+      bio,
+      name_color: nameColor || null,
+      text_color: textColor || null,
+      font_family: fontFamily || null,
+    };
     if (!isGuest && ageNum) updates.age = ageNum;
     await supabase.from("profiles").update(updates).eq("id", profile.id);
     Prefs.setSound(user.id, sound);
-    Prefs.setNameColor(user.id, nameColor);
-    Prefs.setTextColor(user.id, textColor);
-    Prefs.setFontFamily(user.id, fontFamily);
     if (!isGuest && ageNum) {
       Prefs.setAge(user.id, ageNum);
       await supabase.auth.updateUser({ data: { ...(user.user_metadata || {}), age: ageNum } });
