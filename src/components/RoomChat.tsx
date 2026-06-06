@@ -259,7 +259,7 @@ export function RoomChat({ roomId, roomName, onAvatarClick }: Props) {
           onChange={(e) => setInput(e.target.value)}
           placeholder="اكتب رسالة... (انقر مرتين لأي رسالة للرد عليها)"
           className="flex-1"
-          style={user && Prefs.getFontFamily(user.id) ? { fontFamily: Prefs.getFontFamily(user.id) } : undefined}
+          style={profile?.font_family ? { fontFamily: profile.font_family } : undefined}
         />
         <Button type="submit" size="icon" disabled={sending || !input.trim()} className="gradient-primary border-0" aria-label="إرسال الرسالة">
           <Send className="h-4 w-4" />
