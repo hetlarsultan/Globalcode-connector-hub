@@ -9,7 +9,10 @@ export function DataUsagePanel() {
     byType: {},
   });
 
-  useEffect(() => subscribeDataUsage(setStats), []);
+  useEffect(() => {
+    const unsub = subscribeDataUsage(setStats);
+    return () => { unsub(); };
+  }, []);
 
   const types = Object.entries(stats.byType).sort((a, b) => b[1].bytes - a[1].bytes).slice(0, 5);
   const efficiency = stats.bytes < 500_000 ? "ممتاز" : stats.bytes < 2_000_000 ? "جيد" : "مرتفع";
