@@ -189,6 +189,12 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
         <Switch checked={sound} onCheckedChange={setSound} />
       </div>
 
+      <DataUsagePanel />
+
+      <p className="text-center text-[10px] text-muted-foreground">إصدار التطبيق: {APP_VERSION}</p>
+
+
+
       <div className="flex gap-2 pt-2">
         <Button onClick={save} disabled={saving} className="flex-1 gradient-primary border-0 shadow-glow">حفظ</Button>
         <Button variant="outline" onClick={onClose}>إلغاء</Button>
