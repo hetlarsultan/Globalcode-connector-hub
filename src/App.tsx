@@ -35,6 +35,7 @@ const App = () => (
       <Sonner position="top-center" />
       <BrowserRouter>
         <AuthProvider>
+          <UpdatePrompt />
           <Suspense fallback={<Fallback />}>
             <Routes>
               <Route path="/" element={<Index />} />
