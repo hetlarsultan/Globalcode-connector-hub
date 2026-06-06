@@ -21,17 +21,17 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
-    {
+    ({
       name: "emit-version-json",
-      apply: "build" as const,
-      generateBundle(this: any) {
+      apply: "build",
+      generateBundle() {
         (this as any).emitFile({
           type: "asset",
           fileName: "version.json",
           source: JSON.stringify({ version: APP_VERSION, builtAt: new Date().toISOString() }),
         });
       },
-    },
+    } as any),
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: null,
