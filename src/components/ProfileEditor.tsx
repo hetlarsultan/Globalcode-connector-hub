@@ -33,12 +33,12 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
       setDisplayName(profile.display_name);
       setBio(profile.bio || "");
       setAvatarUrl(profile.avatar_url || "");
+      setNameColor(profile.name_color || "");
+      setTextColor(profile.text_color || "");
+      setFontFamily(profile.font_family || "");
     }
     if (user) {
       setSound(Prefs.getSound(user.id));
-      setNameColor(Prefs.getNameColor(user.id));
-      setTextColor(Prefs.getTextColor(user.id));
-      setFontFamily(Prefs.getFontFamily(user.id));
       setLikes(Prefs.getLikes(user.id));
       const dbAge = (profile as any)?.age;
       const metaAge = (user.user_metadata as any)?.age;
