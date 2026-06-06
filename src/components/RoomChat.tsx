@@ -67,7 +67,9 @@ export function RoomChat({ roomId, roomName, onAvatarClick }: Props) {
   const enrich = async (msgs: Message[]) => {
     const ids = [...new Set(msgs.map((m) => m.user_id).filter((id) => !profilesCache.current.has(id)))];
     if (ids.length) {
-      const { data } = await supabase.from("profiles").select("id,username,display_name,avatar_url,gender").in("id", ids);
+      const { data } = await supabase.from("profiles")
+        .select("id,username,display_name,avatar_url,gender,name_color,text_color,font_family")
+        .in("id", ids);
       data?.forEach((p) => profilesCache.current.set(p.id, p));
     }
     return msgs.map((m) => {
@@ -76,9 +78,9 @@ export function RoomChat({ roomId, roomName, onAvatarClick }: Props) {
         ...m,
         profile: p ? {
           ...p,
-          nameColor: Prefs.getNameColor(m.user_id),
-          textColor: Prefs.getTextColor(m.user_id),
-          fontFamily: Prefs.getFontFamily(m.user_id),
+          nameColor: p.name_color || undefined,
+          textColor: p.text_color || undefined,
+          fontFamily: p.font_family || undefined,
         } : undefined,
       };
     });
