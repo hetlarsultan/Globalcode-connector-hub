@@ -35,6 +35,9 @@ export default function Index() {
   const [friendReqCount, setFriendReqCount] = useState(0);
   const [sidebarTab, setSidebarTab] = useState("rooms");
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+  const [onlineCount, setOnlineCount] = useState(0);
+  const [showOnline, setShowOnline] = useState(false);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth");
