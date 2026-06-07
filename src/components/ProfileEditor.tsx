@@ -53,13 +53,36 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
   const isGuest = !!profile?.username?.startsWith("guest_");
 
   const upload = async (file: File) => {
-    if (!profile) return;
-    const path = `${profile.id}/avatar-${Date.now()}.${file.name.split(".").pop()}`;
-    const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true });
-    if (error) return toast.error("فشل رفع الصورة");
+    if (!profile || !user) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("حجم الصورة كبير جدًا (الحد الأقصى 5 ميجابايت)");
+      return;
+    }
+    if (!file.type.startsWith("image/")) {
+      toast.error("الرجاء اختيار ملف صورة صالح");
+      return;
+    }
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("avatars").upload(path, file, {
+      upsert: true,
+      contentType: file.type,
+      cacheControl: "3600",
+    });
+    if (error) {
+      console.error("avatar upload error", error);
+      toast.error(`فشل رفع الصورة: ${error.message}`);
+      return;
+    }
     const { data } = supabase.storage.from("avatars").getPublicUrl(path);
-    setAvatarUrl(data.publicUrl);
-    await supabase.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", profile.id);
+    const publicUrl = `${data.publicUrl}?v=${Date.now()}`;
+    setAvatarUrl(publicUrl);
+    const { error: updErr } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
+    if (updErr) {
+      console.error("profile update error", updErr);
+      toast.error("تم رفع الصورة لكن فشل تحديث الملف الشخصي");
+      return;
+    }
     await refreshProfile();
     toast.success("تم تحديث الصورة");
   };
