@@ -268,6 +268,19 @@ export default function Index() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={showOnline} onOpenChange={setShowOnline}>
+        <DialogContent className="p-0 max-w-md h-[80vh] flex flex-col overflow-hidden">
+          <DialogHeader className="p-3 border-b">
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-4 w-4" /> الأعضاء ({onlineCount} متصل)
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-0">
+            <UsersList onUserClick={(id) => { setOpenUserId(id); setShowOnline(false); }} />
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <IncomingCallListener />
     </div>
   );
