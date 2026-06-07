@@ -17,9 +17,16 @@ export function UserAvatar({ url, name, gender, size = "md", online, className, 
   return (
     <div className={cn("relative inline-block", onClick && "cursor-pointer", className)} onClick={onClick}>
       <Avatar className={cn(sizes[size], "ring-2 ring-offset-2 ring-offset-background", ring)}>
-        {url && <AvatarImage src={url} alt={name} />}
+        {url && (
+          <AvatarImage
+            src={url}
+            alt={name}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+          />
+        )}
         <AvatarFallback className="gradient-primary text-primary-foreground font-semibold">
-          {name.slice(0, 2).toUpperCase()}
+          {name?.slice(0, 2).toUpperCase() || "؟"}
         </AvatarFallback>
       </Avatar>
       {online && (

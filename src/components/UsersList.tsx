@@ -27,25 +27,29 @@ export function UsersList({ onUserClick }: Props) {
   const [genderFilter, setGenderFilter] = useState<string>("all");
   const [roleFilter, setRoleFilter] = useState<string>("all");
 
-  useEffect(() => {
-    (async () => {
-      const { data: profiles } = await supabase.from("profiles").select("*").order("display_name");
-      const { data: roles } = await supabase.from("user_roles").select("user_id,role");
-      const roleMap = new Map(roles?.map((r) => [r.user_id, r.role]) || []);
-      const merged = (profiles || []).map((p) => ({ ...p, role: roleMap.get(p.id) || "member" }));
-      setUsers(merged as any);
-    })();
+  const load = async () => {
+    const [{ data: profiles }, { data: roles }] = await Promise.all([
+      supabase.from("profiles").select("*").order("display_name"),
+      supabase.from("user_roles").select("user_id,role"),
+    ]);
+    const roleMap = new Map(roles?.map((r) => [r.user_id, r.role]) || []);
+    const merged = (profiles || []).map((p) => ({ ...p, role: roleMap.get(p.id) || "member" }));
+    setUsers(merged as any);
+  };
 
-    const ch = supabase.channel(`profiles-list-${Math.random().toString(36).slice(2, 8)}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => {
-        supabase.from("profiles").select("*").then(({ data }) => {
-          if (data) setUsers((prev) => prev.map((u) => {
-            const fresh = data.find((d: any) => d.id === u.id);
-            return fresh ? { ...u, ...fresh } : u;
-          }));
-        });
-      }).subscribe();
-    return () => { supabase.removeChannel(ch); };
+  useEffect(() => {
+    load();
+    const ch = supabase
+      .channel(`profiles-list-${Math.random().toString(36).slice(2, 8)}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "user_roles" }, () => load())
+      .subscribe();
+    const onVis = () => { if (document.visibilityState === "visible") load(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      supabase.removeChannel(ch);
+      document.removeEventListener("visibilitychange", onVis);
+    };
   }, []);
 
   const filtered = users.filter((u) => {
