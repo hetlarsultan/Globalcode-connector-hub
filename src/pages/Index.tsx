@@ -80,20 +80,34 @@ export default function Index() {
     return () => { supabase.removeChannel(ch); };
   }, [user]);
 
-  // online members count
+  // online members count — realtime + polling + refresh on dialog open
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
     const refresh = async () => {
-      const { count } = await supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_online", true);
-      setOnlineCount(count || 0);
+      const { count, error } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("is_online", true);
+      if (!cancelled && !error) setOnlineCount(count || 0);
     };
     refresh();
-    const ch = supabase.channel(`online-count-${user.id}-${Math.random().toString(36).slice(2, 8)}`)
+    const ch = supabase
+      .channel(`online-count-${user.id}-${Math.random().toString(36).slice(2, 8)}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "profiles" }, refresh)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles" }, refresh)
+      .on("postgres_changes", { event: "DELETE", schema: "public", table: "profiles" }, refresh)
       .subscribe();
-    const t = setInterval(refresh, 30000);
-    return () => { supabase.removeChannel(ch); clearInterval(t); };
-  }, [user]);
+    const t = setInterval(refresh, 20000);
+    const onVis = () => { if (document.visibilityState === "visible") refresh(); };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(ch);
+      clearInterval(t);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+  }, [user, showOnline]);
 
   if (loading || !user || !profile) {
     return <div className="min-h-screen flex items-center justify-center gradient-hero"><div className="animate-pulse-dot text-primary">جارٍ التحميل...</div></div>;
