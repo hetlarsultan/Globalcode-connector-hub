@@ -80,6 +80,21 @@ export default function Index() {
     return () => { supabase.removeChannel(ch); };
   }, [user]);
 
+  // online members count
+  useEffect(() => {
+    if (!user) return;
+    const refresh = async () => {
+      const { count } = await supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_online", true);
+      setOnlineCount(count || 0);
+    };
+    refresh();
+    const ch = supabase.channel(`online-count-${user.id}-${Math.random().toString(36).slice(2, 8)}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles" }, refresh)
+      .subscribe();
+    const t = setInterval(refresh, 30000);
+    return () => { supabase.removeChannel(ch); clearInterval(t); };
+  }, [user]);
+
   if (loading || !user || !profile) {
     return <div className="min-h-screen flex items-center justify-center gradient-hero"><div className="animate-pulse-dot text-primary">جارٍ التحميل...</div></div>;
   }
