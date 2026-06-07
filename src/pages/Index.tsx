@@ -16,8 +16,10 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Menu, MessageCircle, Users, UserCog, Hash, Bell, UserPlus } from "lucide-react";
+import { Menu, MessageCircle, Users, UserCog, Hash, Bell, UserPlus, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { checkForUpdate } from "@/lib/register-sw";
+import { toast } from "sonner";
 
 interface Room { id: string; name: string; description: string | null; icon: string | null; }
 
