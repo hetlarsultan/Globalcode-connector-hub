@@ -168,6 +168,28 @@ export default function Index() {
   // Top quick-action bar inside the main chat area
   const QuickBar = activeRoom && !activePrivate ? (
     <div className="flex items-center justify-end gap-1 px-3 py-2 border-b bg-card/60 backdrop-blur-sm">
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="التحقق من التحديثات"
+        disabled={checkingUpdate}
+        onClick={async () => {
+          setCheckingUpdate(true);
+          const found = await checkForUpdate();
+          setCheckingUpdate(false);
+          if (!found) toast.success("أنت تستخدم أحدث إصدار");
+        }}
+      >
+        <RefreshCw className={cn("h-5 w-5", checkingUpdate && "animate-spin")} />
+      </Button>
+      <Button variant="ghost" size="icon" className="relative" onClick={() => setShowOnline(true)} aria-label="الأعضاء المتصلون">
+        <Users className="h-5 w-5" />
+        {onlineCount > 0 && (
+          <span className="absolute top-0.5 right-0.5 h-4 min-w-4 px-1 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center">
+            {onlineCount}
+          </span>
+        )}
+      </Button>
       <Button variant="ghost" size="icon" className="relative" onClick={() => openTab("pm")} aria-label="الرسائل الخاصة">
         <MessageCircle className="h-5 w-5" />
         {unreadTotal > 0 && (
