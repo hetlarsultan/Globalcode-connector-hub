@@ -16,8 +16,10 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Menu, MessageCircle, Users, UserCog, Hash, Bell, UserPlus } from "lucide-react";
+import { Menu, MessageCircle, Users, UserCog, Hash, Bell, UserPlus, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { checkForUpdate } from "@/lib/register-sw";
+import { toast } from "sonner";
 
 interface Room { id: string; name: string; description: string | null; icon: string | null; }
 
@@ -33,6 +35,9 @@ export default function Index() {
   const [friendReqCount, setFriendReqCount] = useState(0);
   const [sidebarTab, setSidebarTab] = useState("rooms");
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+  const [onlineCount, setOnlineCount] = useState(0);
+  const [showOnline, setShowOnline] = useState(false);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth");
@@ -73,6 +78,21 @@ export default function Index() {
       .on("postgres_changes", { event: "*", schema: "public", table: "friendships" }, refresh)
       .subscribe();
     return () => { supabase.removeChannel(ch); };
+  }, [user]);
+
+  // online members count
+  useEffect(() => {
+    if (!user) return;
+    const refresh = async () => {
+      const { count } = await supabase.from("profiles").select("*", { count: "exact", head: true }).eq("is_online", true);
+      setOnlineCount(count || 0);
+    };
+    refresh();
+    const ch = supabase.channel(`online-count-${user.id}-${Math.random().toString(36).slice(2, 8)}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "profiles" }, refresh)
+      .subscribe();
+    const t = setInterval(refresh, 30000);
+    return () => { supabase.removeChannel(ch); clearInterval(t); };
   }, [user]);
 
   if (loading || !user || !profile) {
@@ -148,6 +168,28 @@ export default function Index() {
   // Top quick-action bar inside the main chat area
   const QuickBar = activeRoom && !activePrivate ? (
     <div className="flex items-center justify-end gap-1 px-3 py-2 border-b bg-card/60 backdrop-blur-sm">
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="التحقق من التحديثات"
+        disabled={checkingUpdate}
+        onClick={async () => {
+          setCheckingUpdate(true);
+          const found = await checkForUpdate();
+          setCheckingUpdate(false);
+          if (!found) toast.success("أنت تستخدم أحدث إصدار");
+        }}
+      >
+        <RefreshCw className={cn("h-5 w-5", checkingUpdate && "animate-spin")} />
+      </Button>
+      <Button variant="ghost" size="icon" className="relative" onClick={() => setShowOnline(true)} aria-label="الأعضاء المتصلون">
+        <Users className="h-5 w-5" />
+        {onlineCount > 0 && (
+          <span className="absolute top-0.5 right-0.5 h-4 min-w-4 px-1 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center">
+            {onlineCount}
+          </span>
+        )}
+      </Button>
       <Button variant="ghost" size="icon" className="relative" onClick={() => openTab("pm")} aria-label="الرسائل الخاصة">
         <MessageCircle className="h-5 w-5" />
         {unreadTotal > 0 && (
@@ -223,6 +265,19 @@ export default function Index() {
         <DialogContent>
           <DialogHeader><DialogTitle>الملف الشخصي</DialogTitle></DialogHeader>
           <ProfileEditor onClose={() => setShowProfile(false)} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showOnline} onOpenChange={setShowOnline}>
+        <DialogContent className="p-0 max-w-md h-[80vh] flex flex-col overflow-hidden">
+          <DialogHeader className="p-3 border-b">
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-4 w-4" /> الأعضاء ({onlineCount} متصل)
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-0">
+            <UsersList onUserClick={(id) => { setOpenUserId(id); setShowOnline(false); }} />
+          </div>
         </DialogContent>
       </Dialog>
 

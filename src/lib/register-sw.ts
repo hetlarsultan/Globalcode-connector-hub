@@ -82,3 +82,40 @@ export function registerServiceWorker() {
     });
   });
 }
+
+// Manually triggered update check (from a UI button). Resolves true if a new
+// version was found (the dialog will be shown), false if already up-to-date.
+export async function checkForUpdate(): Promise<boolean> {
+  if (typeof window === "undefined" || !("serviceWorker" in navigator)) return false;
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    if (!reg) {
+      // No SW (dev/preview). Compare remote version directly.
+      const res = await fetch(`/version.json?t=${Date.now()}`, { cache: "no-store" });
+      if (!res.ok) return false;
+      const json = await res.json();
+      if (json.version && json.version !== APP_VERSION) {
+        setPendingUpdate({
+          current: APP_VERSION,
+          next: json.version,
+          activate: () => window.location.reload(),
+        });
+        return true;
+      }
+      return false;
+    }
+    await reg.update();
+    if (reg.waiting) {
+      const next = await fetchRemoteVersion();
+      setPendingUpdate({
+        current: APP_VERSION,
+        next,
+        activate: () => reg.waiting?.postMessage({ type: "SKIP_WAITING" }),
+      });
+      return true;
+    }
+    return false;
+  } catch {
+    return false;
+  }
+}
