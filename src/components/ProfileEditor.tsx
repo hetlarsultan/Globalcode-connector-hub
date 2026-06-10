@@ -7,12 +7,64 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
+import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import { toast } from "sonner";
-import { Camera, LogOut, Trash2, Heart, Volume2 } from "lucide-react";
+import { Camera, LogOut, Trash2, Heart, Volume2, AlertTriangle, RotateCcw, Loader2 } from "lucide-react";
 import { COLOR_CHOICES, FONT_CHOICES, Prefs, tierFromLikes } from "@/lib/local-prefs";
 import { cn } from "@/lib/utils";
 import { DataUsagePanel } from "./DataUsagePanel";
 import { APP_VERSION } from "@/lib/register-sw";
+
+const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
+const MAX_UPLOAD_RETRIES = 3;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+const formatSize = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(1)} ميجابايت`;
+
+const validateAvatarFile = (file: File): string | null => {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    return `نوع الصورة غير مدعوم (${file.type || "غير معروف"}). الصيغ المسموحة: JPG و PNG و WEBP و GIF.`;
+  }
+  if (file.size > MAX_AVATAR_SIZE) {
+    return `حجم الصورة ${formatSize(file.size)} أكبر من الحد المسموح ${formatSize(MAX_AVATAR_SIZE)}.`;
+  }
+  return null;
+};
+
+const optimizeAvatarFile = async (file: File): Promise<File> => {
+  if (file.type === "image/gif" || file.size < 750 * 1024) return file;
+
+  const imageUrl = URL.createObjectURL(file);
+  try {
+    const img = new Image();
+    img.decoding = "async";
+    img.src = imageUrl;
+    await img.decode();
+
+    const maxSide = 1280;
+    const ratio = Math.min(1, maxSide / Math.max(img.width, img.height));
+    if (ratio === 1 && file.size < 1024 * 1024) return file;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(img.width * ratio));
+    canvas.height = Math.max(1, Math.round(img.height * ratio));
+    const ctx = canvas.getContext("2d", { alpha: file.type === "image/png" });
+    if (!ctx) return file;
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    const outputType = file.type === "image/png" ? "image/png" : "image/webp";
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, outputType, 0.82));
+    if (!blob || blob.size >= file.size) return file;
+
+    const ext = outputType === "image/png" ? "png" : "webp";
+    return new File([blob], `avatar.${ext}`, { type: outputType, lastModified: Date.now() });
+  } catch (err) {
+    console.warn("avatar optimization skipped", err);
+    return file;
+  } finally {
+    URL.revokeObjectURL(imageUrl);
+  }
+};
 
 export function ProfileEditor({ onClose }: { onClose: () => void }) {
   const { profile, refreshProfile, signOut, user } = useAuth();
@@ -20,6 +72,10 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>("");
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadAttempts, setUploadAttempts] = useState(0);
+  const [lastAvatarFile, setLastAvatarFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const uid = user?.id || "anon";
@@ -52,26 +108,32 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
 
   const isGuest = !!profile?.username?.startsWith("guest_");
 
-  const upload = async (file: File) => {
+  const upload = async (file: File, attempt = 1) => {
     if (!profile || !user) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("حجم الصورة كبير جدًا (الحد الأقصى 5 ميجابايت)");
+    const validationError = validateAvatarFile(file);
+    setUploadAttempts(attempt);
+    setLastAvatarFile(file);
+    if (validationError) {
+      setUploadError(validationError);
+      toast.warning(validationError);
       return;
     }
-    if (!file.type.startsWith("image/")) {
-      toast.error("الرجاء اختيار ملف صورة صالح");
-      return;
-    }
-    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    setUploading(true);
+    setUploadError(null);
+    const uploadFile = await optimizeAvatarFile(file);
+    const ext = (uploadFile.name.split(".").pop() || "jpg").toLowerCase();
     const path = `${user.id}/avatar-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("avatars").upload(path, file, {
+    const { error } = await supabase.storage.from("avatars").upload(path, uploadFile, {
       upsert: true,
-      contentType: file.type,
+      contentType: uploadFile.type,
       cacheControl: "3600",
     });
     if (error) {
+      setUploading(false);
       console.error("avatar upload error", error);
-      toast.error(`فشل رفع الصورة: ${error.message}`);
+      const message = `فشل رفع الصورة من الخادم: ${error.message}`;
+      setUploadError(message);
+      toast.error(message);
       return;
     }
     const { data } = supabase.storage.from("avatars").getPublicUrl(path);
@@ -79,12 +141,43 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
     setAvatarUrl(publicUrl);
     const { error: updErr } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
     if (updErr) {
+      setUploading(false);
       console.error("profile update error", updErr);
-      toast.error("تم رفع الصورة لكن فشل تحديث الملف الشخصي");
+      const message = `تم رفع الصورة لكن فشل تحديث الملف الشخصي: ${updErr.message}`;
+      setUploadError(message);
+      toast.error(message);
       return;
     }
     await refreshProfile();
+    setUploading(false);
+    setUploadAttempts(0);
+    setUploadError(null);
+    setLastAvatarFile(null);
     toast.success("تم تحديث الصورة");
+  };
+
+  const retryUpload = () => {
+    if (!lastAvatarFile || uploading) return;
+    if (uploadAttempts >= MAX_UPLOAD_RETRIES) {
+      const message = "تم الوصول للحد الأقصى لمحاولات الرفع. اختر صورة أخرى أو حاول لاحقًا.";
+      setUploadError(message);
+      toast.error(message);
+      return;
+    }
+    void upload(lastAvatarFile, uploadAttempts + 1);
+  };
+
+  const handleAvatarSelect = (file?: File) => {
+    if (!file) return;
+    const validationError = validateAvatarFile(file);
+    setLastAvatarFile(file);
+    setUploadAttempts(0);
+    if (validationError) {
+      setUploadError(validationError);
+      toast.warning(validationError);
+      return;
+    }
+    void upload(file, 1);
   };
 
   const removeAvatar = async () => {
@@ -133,9 +226,9 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
       <div className="flex flex-col items-center gap-3">
         <div className="relative">
           <UserAvatar url={avatarUrl || undefined} name={displayName} gender={profile.gender} size="xl" />
-          <button onClick={() => fileRef.current?.click()}
+          <button onClick={() => fileRef.current?.click()} disabled={uploading}
             className="absolute -bottom-1 -left-1 h-9 w-9 rounded-full gradient-primary shadow-glow flex items-center justify-center text-primary-foreground hover:scale-105 transition">
-            <Camera className="h-4 w-4" />
+            {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
           </button>
           {avatarUrl && (
             <button onClick={removeAvatar}
@@ -143,13 +236,38 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
               <Trash2 className="h-4 w-4" />
             </button>
           )}
-          <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            hidden
+            onChange={(e) => {
+              handleAvatarSelect(e.target.files?.[0]);
+              e.currentTarget.value = "";
+            }}
+          />
         </div>
         <div className="flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold" style={{ background: `${tier.color}22`, color: tier.color }}>
           <span>{tier.emoji}</span> {tier.label}
           <span className="opacity-70 flex items-center gap-0.5"><Heart className="h-3 w-3 fill-current" /> {likes}</span>
         </div>
       </div>
+
+      {uploadError && (
+        <Alert variant="destructive" className="text-right">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>تعذر رفع الصورة</AlertTitle>
+          <AlertDescription className="space-y-3">
+            <p className="break-words">{uploadError}</p>
+            {lastAvatarFile && uploadAttempts > 0 && uploadAttempts < MAX_UPLOAD_RETRIES && (
+              <Button type="button" variant="outline" size="sm" onClick={retryUpload} disabled={uploading} className="gap-2">
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+                إعادة المحاولة ({uploadAttempts}/{MAX_UPLOAD_RETRIES})
+              </Button>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="space-y-2">
         <Label>الاسم المعروض</Label>
