@@ -332,13 +332,46 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
         </div>
       </div>
 
+      {uploading && (
+        <div className="space-y-2 p-3 rounded-lg border bg-card/60">
+          <div className="flex items-center justify-between text-xs">
+            <span className="flex items-center gap-2 text-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              {uploadStage || "جارٍ الرفع..."}
+            </span>
+            <span className="font-mono text-muted-foreground">{uploadProgress}%</span>
+          </div>
+          <Progress value={uploadProgress} className="h-2" />
+          {uploadSizeInfo && (
+            <p className="text-[11px] text-muted-foreground text-right">{uploadSizeInfo}</p>
+          )}
+        </div>
+      )}
+
       {uploadError && (
         <Alert variant="destructive" className="text-right">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>تعذر رفع الصورة</AlertTitle>
+          {uploadErrorKind === "permission" ? (
+            <ShieldAlert className="h-4 w-4" />
+          ) : uploadErrorKind === "auth" ? (
+            <LockKeyhole className="h-4 w-4" />
+          ) : (
+            <AlertTriangle className="h-4 w-4" />
+          )}
+          <AlertTitle>
+            {uploadErrorKind === "permission"
+              ? "لا توجد صلاحيات للتخزين"
+              : uploadErrorKind === "auth"
+              ? "مشكلة في تسجيل الدخول"
+              : "تعذر رفع الصورة"}
+          </AlertTitle>
           <AlertDescription className="space-y-3">
             <p className="break-words">{uploadError}</p>
-            {lastAvatarFile && uploadAttempts > 0 && uploadAttempts < MAX_UPLOAD_RETRIES && (
+            {uploadErrorKind === "auth" && (
+              <Button type="button" variant="outline" size="sm" onClick={signOut} className="gap-2">
+                <LogOut className="h-4 w-4" /> تسجيل الخروج وإعادة الدخول
+              </Button>
+            )}
+            {lastAvatarFile && uploadAttempts > 0 && uploadAttempts < MAX_UPLOAD_RETRIES && uploadErrorKind !== "permission" && (
               <Button type="button" variant="outline" size="sm" onClick={retryUpload} disabled={uploading} className="gap-2">
                 {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
                 إعادة المحاولة ({uploadAttempts}/{MAX_UPLOAD_RETRIES})
