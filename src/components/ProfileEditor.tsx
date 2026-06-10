@@ -8,8 +8,9 @@ import { Textarea } from "./ui/textarea";
 import { Label } from "./ui/label";
 import { Switch } from "./ui/switch";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { Progress } from "./ui/progress";
 import { toast } from "sonner";
-import { Camera, LogOut, Trash2, Heart, Volume2, AlertTriangle, RotateCcw, Loader2 } from "lucide-react";
+import { Camera, LogOut, Trash2, Heart, Volume2, AlertTriangle, RotateCcw, Loader2, ShieldAlert, LockKeyhole } from "lucide-react";
 import { COLOR_CHOICES, FONT_CHOICES, Prefs, tierFromLikes } from "@/lib/local-prefs";
 import { cn } from "@/lib/utils";
 import { DataUsagePanel } from "./DataUsagePanel";
@@ -31,8 +32,11 @@ const validateAvatarFile = (file: File): string | null => {
   return null;
 };
 
-const optimizeAvatarFile = async (file: File): Promise<File> => {
-  if (file.type === "image/gif" || file.size < 750 * 1024) return file;
+const optimizeAvatarFile = async (
+  file: File,
+  onProgress?: (msg: string) => void,
+): Promise<File> => {
+  if (file.type === "image/gif") return file;
 
   const imageUrl = URL.createObjectURL(file);
   try {
@@ -41,9 +45,8 @@ const optimizeAvatarFile = async (file: File): Promise<File> => {
     img.src = imageUrl;
     await img.decode();
 
-    const maxSide = 1280;
-    const ratio = Math.min(1, maxSide / Math.max(img.width, img.height));
-    if (ratio === 1 && file.size < 1024 * 1024) return file;
+    const targetMaxSide = file.size > 3 * 1024 * 1024 ? 1024 : file.size > 1.5 * 1024 * 1024 ? 1280 : 1600;
+    const ratio = Math.min(1, targetMaxSide / Math.max(img.width, img.height));
 
     const canvas = document.createElement("canvas");
     canvas.width = Math.max(1, Math.round(img.width * ratio));
@@ -52,18 +55,48 @@ const optimizeAvatarFile = async (file: File): Promise<File> => {
     if (!ctx) return file;
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-    const outputType = file.type === "image/png" ? "image/png" : "image/webp";
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, outputType, 0.82));
-    if (!blob || blob.size >= file.size) return file;
+    const outputType = file.type === "image/png" && file.size < 500 * 1024 ? "image/png" : "image/webp";
+    const qualitySteps = file.size > 3 * 1024 * 1024 ? [0.78, 0.7, 0.62] : [0.85, 0.78];
+    let bestBlob: Blob | null = null;
+    for (const q of qualitySteps) {
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, outputType, q));
+      if (blob && (!bestBlob || blob.size < bestBlob.size)) bestBlob = blob;
+      if (bestBlob && bestBlob.size < 600 * 1024) break;
+    }
+    if (!bestBlob || bestBlob.size >= file.size) {
+      onProgress?.(`الحجم: ${formatSize(file.size)} (لا حاجة للضغط)`);
+      return file;
+    }
 
+    onProgress?.(`الضغط: ${formatSize(file.size)} ← ${formatSize(bestBlob.size)}`);
     const ext = outputType === "image/png" ? "png" : "webp";
-    return new File([blob], `avatar.${ext}`, { type: outputType, lastModified: Date.now() });
+    return new File([bestBlob], `avatar.${ext}`, { type: outputType, lastModified: Date.now() });
   } catch (err) {
     console.warn("avatar optimization skipped", err);
     return file;
   } finally {
     URL.revokeObjectURL(imageUrl);
   }
+};
+
+const classifyUploadError = (err: { message?: string; statusCode?: string | number; error?: string } | null) => {
+  const msg = (err?.message || "").toLowerCase();
+  const code = String(err?.statusCode ?? err?.error ?? "").toLowerCase();
+  if (code === "401" || msg.includes("jwt") || msg.includes("auth") || msg.includes("unauthor")) {
+    return {
+      kind: "auth" as const,
+      title: "مشكلة في تسجيل الدخول",
+      detail: "انتهت جلستك أو لم يتم التحقق من هويتك. الرجاء تسجيل الدخول مجددًا ثم إعادة المحاولة.",
+    };
+  }
+  if (code === "403" || msg.includes("permission") || msg.includes("denied") || msg.includes("not allowed") || msg.includes("rls") || msg.includes("policy") || msg.includes("violates row-level")) {
+    return {
+      kind: "permission" as const,
+      title: "لا توجد صلاحيات للتخزين",
+      detail: "حسابك لا يملك صلاحية الرفع إلى مساحة التخزين. تواصل مع المشرف أو سجّل الدخول كمستخدم كامل.",
+    };
+  }
+  return null;
 };
 
 export function ProfileEditor({ onClose }: { onClose: () => void }) {
@@ -73,7 +106,11 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadStage, setUploadStage] = useState<string>("");
+  const [uploadSizeInfo, setUploadSizeInfo] = useState<string>("");
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadErrorKind, setUploadErrorKind] = useState<"auth" | "permission" | "generic" | null>(null);
   const [uploadAttempts, setUploadAttempts] = useState(0);
   const [lastAvatarFile, setLastAvatarFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -115,45 +152,87 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
     setLastAvatarFile(file);
     if (validationError) {
       setUploadError(validationError);
+      setUploadErrorKind("generic");
       toast.warning(validationError);
       return;
     }
     setUploading(true);
     setUploadError(null);
-    const uploadFile = await optimizeAvatarFile(file);
+    setUploadErrorKind(null);
+    setUploadProgress(8);
+    setUploadStage("جارٍ تحضير الصورة...");
+    setUploadSizeInfo(`الحجم الأصلي: ${formatSize(file.size)}`);
+
+    const uploadFile = await optimizeAvatarFile(file, (msg) => {
+      setUploadStage(msg);
+      setUploadSizeInfo(msg);
+    });
+    setUploadProgress(40);
+    setUploadStage("جارٍ الرفع إلى الخادم...");
+
     const ext = (uploadFile.name.split(".").pop() || "jpg").toLowerCase();
     const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+
+    // مؤشر تقدم تدريجي أثناء الرفع
+    const tick = window.setInterval(() => {
+      setUploadProgress((p) => (p < 88 ? p + 4 : p));
+    }, 200);
+
     const { error } = await supabase.storage.from("avatars").upload(path, uploadFile, {
       upsert: true,
       contentType: uploadFile.type,
       cacheControl: "3600",
     });
+    window.clearInterval(tick);
+
     if (error) {
       setUploading(false);
+      setUploadProgress(0);
+      setUploadStage("");
       console.error("avatar upload error", error);
-      const message = `فشل رفع الصورة من الخادم: ${error.message}`;
+      const classified = classifyUploadError(error as any);
+      const message = classified
+        ? `${classified.title}: ${classified.detail} (تفاصيل: ${error.message})`
+        : `فشل رفع الصورة من الخادم: ${error.message}`;
       setUploadError(message);
-      toast.error(message);
+      setUploadErrorKind(classified?.kind ?? "generic");
+      toast.error(classified?.title || message);
       return;
     }
+    setUploadProgress(94);
+    setUploadStage("جارٍ تحديث الملف الشخصي...");
+
     const { data } = supabase.storage.from("avatars").getPublicUrl(path);
     const publicUrl = `${data.publicUrl}?v=${Date.now()}`;
     setAvatarUrl(publicUrl);
     const { error: updErr } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
     if (updErr) {
       setUploading(false);
+      setUploadProgress(0);
+      setUploadStage("");
       console.error("profile update error", updErr);
-      const message = `تم رفع الصورة لكن فشل تحديث الملف الشخصي: ${updErr.message}`;
+      const classified = classifyUploadError(updErr as any);
+      const message = classified
+        ? `${classified.title}: ${classified.detail} (تفاصيل: ${updErr.message})`
+        : `تم رفع الصورة لكن فشل تحديث الملف الشخصي: ${updErr.message}`;
       setUploadError(message);
-      toast.error(message);
+      setUploadErrorKind(classified?.kind ?? "generic");
+      toast.error(classified?.title || message);
       return;
     }
+    setUploadProgress(100);
+    setUploadStage("اكتمل الرفع");
     await refreshProfile();
     setUploading(false);
     setUploadAttempts(0);
     setUploadError(null);
+    setUploadErrorKind(null);
     setLastAvatarFile(null);
     toast.success("تم تحديث الصورة");
+    window.setTimeout(() => {
+      setUploadProgress(0);
+      setUploadStage("");
+    }, 1200);
   };
 
   const retryUpload = () => {
@@ -253,13 +332,46 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
         </div>
       </div>
 
+      {uploading && (
+        <div className="space-y-2 p-3 rounded-lg border bg-card/60">
+          <div className="flex items-center justify-between text-xs">
+            <span className="flex items-center gap-2 text-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              {uploadStage || "جارٍ الرفع..."}
+            </span>
+            <span className="font-mono text-muted-foreground">{uploadProgress}%</span>
+          </div>
+          <Progress value={uploadProgress} className="h-2" />
+          {uploadSizeInfo && (
+            <p className="text-[11px] text-muted-foreground text-right">{uploadSizeInfo}</p>
+          )}
+        </div>
+      )}
+
       {uploadError && (
         <Alert variant="destructive" className="text-right">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>تعذر رفع الصورة</AlertTitle>
+          {uploadErrorKind === "permission" ? (
+            <ShieldAlert className="h-4 w-4" />
+          ) : uploadErrorKind === "auth" ? (
+            <LockKeyhole className="h-4 w-4" />
+          ) : (
+            <AlertTriangle className="h-4 w-4" />
+          )}
+          <AlertTitle>
+            {uploadErrorKind === "permission"
+              ? "لا توجد صلاحيات للتخزين"
+              : uploadErrorKind === "auth"
+              ? "مشكلة في تسجيل الدخول"
+              : "تعذر رفع الصورة"}
+          </AlertTitle>
           <AlertDescription className="space-y-3">
             <p className="break-words">{uploadError}</p>
-            {lastAvatarFile && uploadAttempts > 0 && uploadAttempts < MAX_UPLOAD_RETRIES && (
+            {uploadErrorKind === "auth" && (
+              <Button type="button" variant="outline" size="sm" onClick={signOut} className="gap-2">
+                <LogOut className="h-4 w-4" /> تسجيل الخروج وإعادة الدخول
+              </Button>
+            )}
+            {lastAvatarFile && uploadAttempts > 0 && uploadAttempts < MAX_UPLOAD_RETRIES && uploadErrorKind !== "permission" && (
               <Button type="button" variant="outline" size="sm" onClick={retryUpload} disabled={uploading} className="gap-2">
                 {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
                 إعادة المحاولة ({uploadAttempts}/{MAX_UPLOAD_RETRIES})
