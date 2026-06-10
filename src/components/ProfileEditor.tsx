@@ -151,45 +151,87 @@ export function ProfileEditor({ onClose }: { onClose: () => void }) {
     setLastAvatarFile(file);
     if (validationError) {
       setUploadError(validationError);
+      setUploadErrorKind("generic");
       toast.warning(validationError);
       return;
     }
     setUploading(true);
     setUploadError(null);
-    const uploadFile = await optimizeAvatarFile(file);
+    setUploadErrorKind(null);
+    setUploadProgress(8);
+    setUploadStage("جارٍ تحضير الصورة...");
+    setUploadSizeInfo(`الحجم الأصلي: ${formatSize(file.size)}`);
+
+    const uploadFile = await optimizeAvatarFile(file, (msg) => {
+      setUploadStage(msg);
+      setUploadSizeInfo(msg);
+    });
+    setUploadProgress(40);
+    setUploadStage("جارٍ الرفع إلى الخادم...");
+
     const ext = (uploadFile.name.split(".").pop() || "jpg").toLowerCase();
     const path = `${user.id}/avatar-${Date.now()}.${ext}`;
+
+    // مؤشر تقدم تدريجي أثناء الرفع
+    const tick = window.setInterval(() => {
+      setUploadProgress((p) => (p < 88 ? p + 4 : p));
+    }, 200);
+
     const { error } = await supabase.storage.from("avatars").upload(path, uploadFile, {
       upsert: true,
       contentType: uploadFile.type,
       cacheControl: "3600",
     });
+    window.clearInterval(tick);
+
     if (error) {
       setUploading(false);
+      setUploadProgress(0);
+      setUploadStage("");
       console.error("avatar upload error", error);
-      const message = `فشل رفع الصورة من الخادم: ${error.message}`;
+      const classified = classifyUploadError(error as any);
+      const message = classified
+        ? `${classified.title}: ${classified.detail} (تفاصيل: ${error.message})`
+        : `فشل رفع الصورة من الخادم: ${error.message}`;
       setUploadError(message);
-      toast.error(message);
+      setUploadErrorKind(classified?.kind ?? "generic");
+      toast.error(classified?.title || message);
       return;
     }
+    setUploadProgress(94);
+    setUploadStage("جارٍ تحديث الملف الشخصي...");
+
     const { data } = supabase.storage.from("avatars").getPublicUrl(path);
     const publicUrl = `${data.publicUrl}?v=${Date.now()}`;
     setAvatarUrl(publicUrl);
     const { error: updErr } = await supabase.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
     if (updErr) {
       setUploading(false);
+      setUploadProgress(0);
+      setUploadStage("");
       console.error("profile update error", updErr);
-      const message = `تم رفع الصورة لكن فشل تحديث الملف الشخصي: ${updErr.message}`;
+      const classified = classifyUploadError(updErr as any);
+      const message = classified
+        ? `${classified.title}: ${classified.detail} (تفاصيل: ${updErr.message})`
+        : `تم رفع الصورة لكن فشل تحديث الملف الشخصي: ${updErr.message}`;
       setUploadError(message);
-      toast.error(message);
+      setUploadErrorKind(classified?.kind ?? "generic");
+      toast.error(classified?.title || message);
       return;
     }
+    setUploadProgress(100);
+    setUploadStage("اكتمل الرفع");
     await refreshProfile();
     setUploading(false);
     setUploadAttempts(0);
     setUploadError(null);
+    setUploadErrorKind(null);
     setLastAvatarFile(null);
     toast.success("تم تحديث الصورة");
+    window.setTimeout(() => {
+      setUploadProgress(0);
+      setUploadStage("");
+    }, 1200);
   };
 
   const retryUpload = () => {
