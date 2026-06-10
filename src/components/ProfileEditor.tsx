@@ -31,8 +31,11 @@ const validateAvatarFile = (file: File): string | null => {
   return null;
 };
 
-const optimizeAvatarFile = async (file: File): Promise<File> => {
-  if (file.type === "image/gif" || file.size < 750 * 1024) return file;
+const optimizeAvatarFile = async (
+  file: File,
+  onProgress?: (msg: string) => void,
+): Promise<File> => {
+  if (file.type === "image/gif") return file;
 
   const imageUrl = URL.createObjectURL(file);
   try {
@@ -41,9 +44,8 @@ const optimizeAvatarFile = async (file: File): Promise<File> => {
     img.src = imageUrl;
     await img.decode();
 
-    const maxSide = 1280;
-    const ratio = Math.min(1, maxSide / Math.max(img.width, img.height));
-    if (ratio === 1 && file.size < 1024 * 1024) return file;
+    const targetMaxSide = file.size > 3 * 1024 * 1024 ? 1024 : file.size > 1.5 * 1024 * 1024 ? 1280 : 1600;
+    const ratio = Math.min(1, targetMaxSide / Math.max(img.width, img.height));
 
     const canvas = document.createElement("canvas");
     canvas.width = Math.max(1, Math.round(img.width * ratio));
@@ -52,18 +54,48 @@ const optimizeAvatarFile = async (file: File): Promise<File> => {
     if (!ctx) return file;
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-    const outputType = file.type === "image/png" ? "image/png" : "image/webp";
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, outputType, 0.82));
-    if (!blob || blob.size >= file.size) return file;
+    const outputType = file.type === "image/png" && file.size < 500 * 1024 ? "image/png" : "image/webp";
+    const qualitySteps = file.size > 3 * 1024 * 1024 ? [0.78, 0.7, 0.62] : [0.85, 0.78];
+    let bestBlob: Blob | null = null;
+    for (const q of qualitySteps) {
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, outputType, q));
+      if (blob && (!bestBlob || blob.size < bestBlob.size)) bestBlob = blob;
+      if (bestBlob && bestBlob.size < 600 * 1024) break;
+    }
+    if (!bestBlob || bestBlob.size >= file.size) {
+      onProgress?.(`الحجم: ${formatSize(file.size)} (لا حاجة للضغط)`);
+      return file;
+    }
 
+    onProgress?.(`الضغط: ${formatSize(file.size)} ← ${formatSize(bestBlob.size)}`);
     const ext = outputType === "image/png" ? "png" : "webp";
-    return new File([blob], `avatar.${ext}`, { type: outputType, lastModified: Date.now() });
+    return new File([bestBlob], `avatar.${ext}`, { type: outputType, lastModified: Date.now() });
   } catch (err) {
     console.warn("avatar optimization skipped", err);
     return file;
   } finally {
     URL.revokeObjectURL(imageUrl);
   }
+};
+
+const classifyUploadError = (err: { message?: string; statusCode?: string | number; error?: string } | null) => {
+  const msg = (err?.message || "").toLowerCase();
+  const code = String(err?.statusCode ?? err?.error ?? "").toLowerCase();
+  if (code === "401" || msg.includes("jwt") || msg.includes("auth") || msg.includes("unauthor")) {
+    return {
+      kind: "auth" as const,
+      title: "مشكلة في تسجيل الدخول",
+      detail: "انتهت جلستك أو لم يتم التحقق من هويتك. الرجاء تسجيل الدخول مجددًا ثم إعادة المحاولة.",
+    };
+  }
+  if (code === "403" || msg.includes("permission") || msg.includes("denied") || msg.includes("not allowed") || msg.includes("rls") || msg.includes("policy") || msg.includes("violates row-level")) {
+    return {
+      kind: "permission" as const,
+      title: "لا توجد صلاحيات للتخزين",
+      detail: "حسابك لا يملك صلاحية الرفع إلى مساحة التخزين. تواصل مع المشرف أو سجّل الدخول كمستخدم كامل.",
+    };
+  }
+  return null;
 };
 
 export function ProfileEditor({ onClose }: { onClose: () => void }) {
