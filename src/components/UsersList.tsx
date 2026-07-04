@@ -29,7 +29,7 @@ export function UsersList({ onUserClick }: Props) {
 
   const load = async () => {
     const [{ data: profiles }, { data: roles }] = await Promise.all([
-      supabase.from("profiles").select("*").order("display_name"),
+      supabase.from("profiles").select("id,username,display_name,avatar_url,bio,gender,is_online,last_seen,created_at,updated_at,name_color,text_color,font_family").order("display_name"),
       supabase.from("user_roles").select("user_id,role"),
     ]);
     const roleMap = new Map(roles?.map((r) => [r.user_id, r.role]) || []);

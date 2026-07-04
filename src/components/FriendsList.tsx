@@ -30,7 +30,7 @@ export function FriendsList({ onOpenChat }: Props) {
       .or(`requester_id.eq.${user.id},addressee_id.eq.${user.id}`);
     if (!fs) return;
     const otherIds = fs.map((f: any) => f.requester_id === user.id ? f.addressee_id : f.requester_id);
-    const { data: profs } = await supabase.from("profiles").select("*").in("id", otherIds);
+    const { data: profs } = await supabase.from("profiles").select("id,username,display_name,avatar_url,bio,gender,is_online,last_seen,created_at,updated_at,name_color,text_color,font_family").in("id", otherIds);
     const profMap = new Map(profs?.map((p: any) => [p.id, p]) || []);
     setItems(fs.map((f: any) => ({ ...f, profile: profMap.get(f.requester_id === user.id ? f.addressee_id : f.requester_id) })));
   };
