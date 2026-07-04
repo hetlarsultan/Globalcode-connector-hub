@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +9,6 @@ import { UsersList } from "@/components/UsersList";
 import { FriendsList } from "@/components/FriendsList";
 import { ConversationsList } from "@/components/ConversationsList";
 import { UserCard } from "@/components/UserCard";
-import { ProfileEditor } from "@/components/ProfileEditor";
 import { IncomingCallListener } from "@/components/IncomingCallListener";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
@@ -20,6 +19,12 @@ import { Menu, MessageCircle, Users, UserCog, Hash, Bell, UserPlus, RefreshCw } 
 import { cn } from "@/lib/utils";
 import { checkForUpdate } from "@/lib/register-sw";
 import { toast } from "sonner";
+
+const ProfileEditor = lazy(() =>
+  import("@/components/ProfileEditor").then((m) => ({ default: m.ProfileEditor })),
+);
+
+const ROOMS_CACHE_KEY = "cache:rooms:v1";
 
 interface Room { id: string; name: string; description: string | null; icon: string | null; }
 
