@@ -274,17 +274,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_user_role: {
-        Args: { _user_id: string }
-        Returns: Database["public"]["Enums"]["app_role"]
-      }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
+      get_my_age: { Args: never; Returns: number }
+      mark_pm_read: { Args: { p_id: string }; Returns: undefined }
+      mark_pm_thread_read: { Args: { p_sender: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "member" | "visitor"

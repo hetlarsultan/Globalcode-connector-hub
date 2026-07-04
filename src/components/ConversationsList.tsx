@@ -41,7 +41,7 @@ export function ConversationsList({ onOpenChat }: Props) {
     }
     const ids = [...map.keys()];
     if (ids.length) {
-      const { data: profs } = await supabase.from("profiles").select("*").in("id", ids);
+      const { data: profs } = await supabase.from("profiles").select("id,username,display_name,avatar_url,bio,gender,is_online,last_seen,created_at,updated_at,name_color,text_color,font_family").in("id", ids);
       profs?.forEach((p: any) => { const c = map.get(p.id); if (c) c.profile = p; });
     }
     setConvs([...map.values()].sort((a, b) => b.last_at.localeCompare(a.last_at)));

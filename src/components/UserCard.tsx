@@ -37,7 +37,7 @@ export function UserCard({ userId, onClose, onPrivateMessage }: Props) {
   useEffect(() => {
     if (!userId) { setProfile(null); return; }
     (async () => {
-      const { data: p } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+      const { data: p } = await supabase.from("profiles").select("id,username,display_name,avatar_url,bio,gender,is_online,last_seen,created_at,updated_at,name_color,text_color,font_family").eq("id", userId).maybeSingle();
       if (p) setProfile(p as Profile);
       const { data: r } = await supabase.from("user_roles").select("role").eq("user_id", userId).maybeSingle();
       if (r) setRole(r.role);
