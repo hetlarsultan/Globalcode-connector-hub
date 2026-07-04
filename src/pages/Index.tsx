@@ -50,10 +50,22 @@ export default function Index() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("rooms").select("*").order("created_at").then(({ data }) => {
+    // instant paint from cache
+    try {
+      const cached = localStorage.getItem(ROOMS_CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached) as Room[];
+        if (Array.isArray(parsed) && parsed.length) {
+          setRooms(parsed);
+          if (!activeRoom) setActiveRoom(parsed[0]);
+        }
+      }
+    } catch {}
+    supabase.from("rooms").select("id,name,description,icon").order("created_at").then(({ data }) => {
       if (data) {
         setRooms(data as Room[]);
         if (!activeRoom && data.length) setActiveRoom(data[0] as Room);
+        try { localStorage.setItem(ROOMS_CACHE_KEY, JSON.stringify(data)); } catch {}
       }
     });
     supabase.from("profiles").update({ is_online: true, last_seen: new Date().toISOString() }).eq("id", user.id).then();
