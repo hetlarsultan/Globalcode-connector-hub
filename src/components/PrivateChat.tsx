@@ -77,8 +77,13 @@ export function PrivateChat({ otherUser, onBack, onAvatarClick }: Props) {
 
   const uploadImage = async (file: File) => {
     if (!user) return;
-    const path = `${user.id}/${Date.now()}-${file.name}`;
-    const { error } = await supabase.storage.from("chat-images").upload(path, file);
+    if (!file.type.startsWith("image/") || file.type === "image/svg+xml") {
+      return toast.error("نوع الصورة غير مدعوم");
+    }
+    const map: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp", "image/heic": "heic", "image/heif": "heif" };
+    const ext = map[file.type] || "jpg";
+    const path = `${user.id}/${Date.now()}.${ext}`;
+    const { error } = await supabase.storage.from("chat-images").upload(path, file, { contentType: file.type });
     if (error) return toast.error("فشل رفع الصورة");
     const { data } = supabase.storage.from("chat-images").getPublicUrl(path);
     await send(data.publicUrl);
