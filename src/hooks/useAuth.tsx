@@ -32,9 +32,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const PROFILE_COLS = "id,username,display_name,avatar_url,bio,gender,is_online,last_seen,created_at,updated_at,name_color,text_color,font_family";
+
   const loadProfile = async (uid: string) => {
-    const { data } = await supabase.from("profiles").select("*").eq("id", uid).maybeSingle();
-    if (data) setProfile(data as Profile);
+    const { data } = await supabase.from("profiles").select(PROFILE_COLS).eq("id", uid).maybeSingle();
+    if (!data) return;
+    // age is column-restricted; fetch via SECURITY DEFINER RPC (own row only)
+    const { data: ageData } = await supabase.rpc("get_my_age" as any);
+    setProfile({ ...(data as any), age: (ageData as number | null) ?? null } as Profile);
   };
 
   useEffect(() => {
