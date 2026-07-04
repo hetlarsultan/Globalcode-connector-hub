@@ -48,6 +48,18 @@ export default function Index() {
     if (!loading && !user) navigate("/auth");
   }, [user, loading, navigate]);
 
+  // Prefetch the ProfileEditor chunk when the browser is idle so opening the
+  // dialog is instant, even on slow connections.
+  useEffect(() => {
+    if (!user) return;
+    const idle = (cb: () => void) => {
+      const w = window as any;
+      if (typeof w.requestIdleCallback === "function") w.requestIdleCallback(cb, { timeout: 3000 });
+      else setTimeout(cb, 1500);
+    };
+    idle(() => { import("@/components/ProfileEditor").catch(() => {}); });
+  }, [user]);
+
   useEffect(() => {
     if (!user) return;
     // instant paint from cache
