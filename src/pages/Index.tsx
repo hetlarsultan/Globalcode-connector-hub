@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,7 +9,6 @@ import { UsersList } from "@/components/UsersList";
 import { FriendsList } from "@/components/FriendsList";
 import { ConversationsList } from "@/components/ConversationsList";
 import { UserCard } from "@/components/UserCard";
-import { ProfileEditor } from "@/components/ProfileEditor";
 import { IncomingCallListener } from "@/components/IncomingCallListener";
 import { UserAvatar } from "@/components/UserAvatar";
 import { Button } from "@/components/ui/button";
@@ -20,6 +19,12 @@ import { Menu, MessageCircle, Users, UserCog, Hash, Bell, UserPlus, RefreshCw } 
 import { cn } from "@/lib/utils";
 import { checkForUpdate } from "@/lib/register-sw";
 import { toast } from "sonner";
+
+const ProfileEditor = lazy(() =>
+  import("@/components/ProfileEditor").then((m) => ({ default: m.ProfileEditor })),
+);
+
+const ROOMS_CACHE_KEY = "cache:rooms:v1";
 
 interface Room { id: string; name: string; description: string | null; icon: string | null; }
 
@@ -43,12 +48,36 @@ export default function Index() {
     if (!loading && !user) navigate("/auth");
   }, [user, loading, navigate]);
 
+  // Prefetch the ProfileEditor chunk when the browser is idle so opening the
+  // dialog is instant, even on slow connections.
   useEffect(() => {
     if (!user) return;
-    supabase.from("rooms").select("*").order("created_at").then(({ data }) => {
+    const idle = (cb: () => void) => {
+      const w = window as any;
+      if (typeof w.requestIdleCallback === "function") w.requestIdleCallback(cb, { timeout: 3000 });
+      else setTimeout(cb, 1500);
+    };
+    idle(() => { import("@/components/ProfileEditor").catch(() => {}); });
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    // instant paint from cache
+    try {
+      const cached = localStorage.getItem(ROOMS_CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached) as Room[];
+        if (Array.isArray(parsed) && parsed.length) {
+          setRooms(parsed);
+          if (!activeRoom) setActiveRoom(parsed[0]);
+        }
+      }
+    } catch {}
+    supabase.from("rooms").select("id,name,description,icon").order("created_at").then(({ data }) => {
       if (data) {
         setRooms(data as Room[]);
         if (!activeRoom && data.length) setActiveRoom(data[0] as Room);
+        try { localStorage.setItem(ROOMS_CACHE_KEY, JSON.stringify(data)); } catch {}
       }
     });
     supabase.from("profiles").update({ is_online: true, last_seen: new Date().toISOString() }).eq("id", user.id).then();
@@ -278,7 +307,9 @@ export default function Index() {
       <Dialog open={showProfile} onOpenChange={setShowProfile}>
         <DialogContent>
           <DialogHeader><DialogTitle>الملف الشخصي</DialogTitle></DialogHeader>
-          <ProfileEditor onClose={() => setShowProfile(false)} />
+          <Suspense fallback={<div className="py-8 text-center text-muted-foreground animate-pulse">...</div>}>
+            <ProfileEditor onClose={() => setShowProfile(false)} />
+          </Suspense>
         </DialogContent>
       </Dialog>
 
