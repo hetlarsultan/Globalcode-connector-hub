@@ -42,8 +42,7 @@ export function PrivateChat({ otherUser, onBack, onAvatarClick }: Props) {
         .or(`and(sender_id.eq.${user.id},recipient_id.eq.${otherUser.id}),and(sender_id.eq.${otherUser.id},recipient_id.eq.${user.id})`)
         .order("created_at", { ascending: true });
       if (data) setMsgs(data as PM[]);
-      await supabase.from("private_messages").update({ is_read: true })
-        .eq("recipient_id", user.id).eq("sender_id", otherUser.id).eq("is_read", false);
+      await supabase.rpc("mark_pm_thread_read" as any, { p_sender: otherUser.id });
     })();
 
     const ch = supabase
@@ -54,7 +53,7 @@ export function PrivateChat({ otherUser, onBack, onAvatarClick }: Props) {
             (m.sender_id === otherUser.id && m.recipient_id === user.id)) {
           setMsgs((p) => [...p, m]);
           if (m.recipient_id === user.id) {
-            supabase.from("private_messages").update({ is_read: true }).eq("id", m.id).then();
+            supabase.rpc("mark_pm_read" as any, { p_id: m.id }).then();
             if (Prefs.getSound(user.id)) playPing();
           }
         }
