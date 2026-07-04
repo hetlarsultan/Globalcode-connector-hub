@@ -295,7 +295,9 @@ export default function Index() {
       <Dialog open={showProfile} onOpenChange={setShowProfile}>
         <DialogContent>
           <DialogHeader><DialogTitle>الملف الشخصي</DialogTitle></DialogHeader>
-          <ProfileEditor onClose={() => setShowProfile(false)} />
+          <Suspense fallback={<div className="py-8 text-center text-muted-foreground animate-pulse">...</div>}>
+            <ProfileEditor onClose={() => setShowProfile(false)} />
+          </Suspense>
         </DialogContent>
       </Dialog>
 
