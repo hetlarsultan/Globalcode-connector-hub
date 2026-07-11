@@ -36,6 +36,14 @@ export function PrivateChat({ otherUser, onBack, onAvatarClick }: Props) {
 
   useEffect(() => {
     if (!user) return;
+    const cacheKey = `pm-msgs-${user.id}-${otherUser.id}`;
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const parsed = JSON.parse(cached) as PM[];
+        if (Array.isArray(parsed) && parsed.length) setMsgs(parsed);
+      }
+    } catch {}
     (async () => {
       const { data } = await supabase
         .from("private_messages").select("*")
@@ -44,6 +52,7 @@ export function PrivateChat({ otherUser, onBack, onAvatarClick }: Props) {
       if (data) setMsgs(data as PM[]);
       await supabase.rpc("mark_pm_thread_read" as any, { p_sender: otherUser.id });
     })();
+
 
     const ch = supabase
       .channel(`pm-${user.id}-${otherUser.id}`)
