@@ -67,6 +67,10 @@ export function PrivateChat({ otherUser, onBack, onAvatarClick }: Props) {
           }
         }
       })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "private_messages" }, (payload) => {
+        const m = payload.new as PM;
+        setMsgs((p) => p.map((x) => x.id === m.id ? { ...x, image_url: m.image_url, is_read: m.is_read } : x));
+      })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
   }, [user, otherUser.id]);
