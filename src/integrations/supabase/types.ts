@@ -274,6 +274,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      consume_message_image: { Args: { p_id: string }; Returns: undefined }
+      consume_pm_image: { Args: { p_id: string }; Returns: undefined }
       get_my_age: { Args: never; Returns: number }
       mark_pm_read: { Args: { p_id: string }; Returns: undefined }
       mark_pm_thread_read: { Args: { p_sender: string }; Returns: undefined }

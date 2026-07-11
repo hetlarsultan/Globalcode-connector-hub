@@ -116,6 +116,11 @@ export function RoomChat({ roomId, roomName, onAvatarClick }: Props) {
           setMessages((prev) => [...prev, ...enriched]);
           if (user && payload.new.user_id !== user.id && Prefs.getSound(user.id)) playPing();
         })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages", filter: `room_id=eq.${roomId}` },
+        (payload) => {
+          const upd = payload.new as Message;
+          setMessages((prev) => prev.map((m) => m.id === upd.id ? { ...m, image_url: upd.image_url, content: upd.content } : m));
+        })
       .on("presence", { event: "sync" }, () => {
         const state = ch.presenceState() as Record<string, any[]>;
         const list: PresenceUser[] = [];
@@ -254,7 +259,23 @@ export function RoomChat({ roomId, roomName, onAvatarClick }: Props) {
                     </div>
                   )}
                   {m.image_url && (
-                    <img src={m.image_url} alt="" className="rounded-lg max-h-64 mb-1 cursor-pointer" onClick={() => window.open(m.image_url!, "_blank")} />
+                    <img
+                      src={m.image_url}
+                      alt=""
+                      className="rounded-lg max-h-64 mb-1 cursor-pointer"
+                      onClick={() => {
+                        const url = m.image_url!;
+                        window.open(url, "_blank");
+                        if (!mine) {
+                          supabase.rpc("consume_message_image" as any, { p_id: m.id }).then(() => {
+                            setMessages((prev) => prev.map((x) => x.id === m.id ? { ...x, image_url: null } : x));
+                          });
+                        }
+                      }}
+                    />
+                  )}
+                  {mine && m.image_url === null && m.content === "📷 صورة" && (
+                    <div className="text-[10px] opacity-70 italic">🔥 تم عرض الصورة واختفت</div>
                   )}
                   {m.content}
                 </div>
