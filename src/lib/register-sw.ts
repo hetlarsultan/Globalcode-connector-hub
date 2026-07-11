@@ -47,32 +47,32 @@ export function registerServiceWorker() {
 
   window.addEventListener("load", () => {
     navigator.serviceWorker.register("/sw.js").then((reg) => {
-      setInterval(() => { reg.update().catch(() => {}); }, 60 * 60 * 1000);
+      // Check for updates every 5 minutes + on tab focus
+      const doUpdate = () => reg.update().catch(() => {});
+      setInterval(doUpdate, 5 * 60 * 1000);
+      window.addEventListener("focus", doUpdate);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") doUpdate();
+      });
 
-      const promptUpdate = async (worker: ServiceWorker) => {
-        const next = await fetchRemoteVersion();
-        setPendingUpdate({
-          current: APP_VERSION,
-          next,
-          activate: () => {
-            worker.postMessage({ type: "SKIP_WAITING" });
-            // controllerchange listener below will reload.
-          },
-        });
+      const activate = (worker: ServiceWorker) => {
+        // Auto-activate silently — no dialog
+        worker.postMessage({ type: "SKIP_WAITING" });
       };
 
-      if (reg.waiting) promptUpdate(reg.waiting);
+      if (reg.waiting) activate(reg.waiting);
 
       reg.addEventListener("updatefound", () => {
         const nw = reg.installing;
         if (!nw) return;
         nw.addEventListener("statechange", () => {
           if (nw.state === "installed" && navigator.serviceWorker.controller) {
-            promptUpdate(nw);
+            activate(nw);
           }
         });
       });
     }).catch(() => {});
+
 
     let refreshing = false;
     navigator.serviceWorker.addEventListener("controllerchange", () => {

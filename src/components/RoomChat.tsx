@@ -89,12 +89,24 @@ export function RoomChat({ roomId, roomName, onAvatarClick }: Props) {
   useEffect(() => {
     setMessages([]);
     setMembers([]);
+    // Load last 50 from cache first (instant paint)
+    try {
+      const cached = localStorage.getItem(`room-msgs-${roomId}`);
+      if (cached) {
+        const parsed = JSON.parse(cached) as Message[];
+        if (Array.isArray(parsed) && parsed.length) setMessages(parsed);
+      }
+    } catch {}
     (async () => {
       const { data } = await supabase
         .from("messages").select("*").eq("room_id", roomId)
         .order("created_at", { ascending: true }).limit(100);
-      if (data) setMessages(await enrich(data as Message[]));
+      if (data) {
+        const enriched = await enrich(data as Message[]);
+        setMessages(enriched);
+      }
     })();
+
 
     const ch = supabase
       .channel(`room-${roomId}`, { config: { presence: { key: user?.id || "anon" } } })
@@ -127,7 +139,15 @@ export function RoomChat({ roomId, roomName, onAvatarClick }: Props) {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages]);
+    // Persist last 50 messages for instant reload
+    if (messages.length) {
+      try {
+        const last = messages.slice(-50);
+        localStorage.setItem(`room-msgs-${roomId}`, JSON.stringify(last));
+      } catch {}
+    }
+  }, [messages, roomId]);
+
 
   const send = async (imageUrl?: string) => {
     if (!user || (!input.trim() && !imageUrl)) return;
