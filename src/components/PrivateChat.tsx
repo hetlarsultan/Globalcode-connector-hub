@@ -149,11 +149,27 @@ export function PrivateChat({ otherUser, onBack, onAvatarClick }: Props) {
                 "max-w-[75%] rounded-2xl px-3.5 py-2 text-sm shadow-sm",
                 mine ? "gradient-bubble-me text-primary-foreground rounded-br-md" : "bg-card border rounded-bl-md"
               )}>
-                {m.image_url && <img src={m.image_url} alt="" className="rounded-lg max-h-64 mb-1 cursor-pointer" onClick={() => window.open(m.image_url!, "_blank")} />}
+                {m.image_url && (
+                  <img
+                    src={m.image_url}
+                    alt=""
+                    className="rounded-lg max-h-64 mb-1 cursor-pointer"
+                    onClick={() => {
+                      const url = m.image_url!;
+                      window.open(url, "_blank");
+                      if (!mine) {
+                        supabase.rpc("consume_pm_image" as any, { p_id: m.id }).then(() => {
+                          setMsgs((p) => p.map((x) => x.id === m.id ? { ...x, image_url: null } : x));
+                        });
+                      }
+                    }}
+                  />
+                )}
                 {m.content}
                 <div className="text-[10px] mt-1 opacity-70">
                   {new Date(m.created_at).toLocaleTimeString("ar-EG", { hour: "2-digit", minute: "2-digit" })}
                   {mine && (m.is_read ? " ✓✓" : " ✓")}
+                  {mine && m.image_url === null && " 🔥"}
                 </div>
               </div>
             </div>
