@@ -139,7 +139,15 @@ export function RoomChat({ roomId, roomName, onAvatarClick }: Props) {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages]);
+    // Persist last 50 messages for instant reload
+    if (messages.length) {
+      try {
+        const last = messages.slice(-50);
+        localStorage.setItem(`room-msgs-${roomId}`, JSON.stringify(last));
+      } catch {}
+    }
+  }, [messages, roomId]);
+
 
   const send = async (imageUrl?: string) => {
     if (!user || (!input.trim() && !imageUrl)) return;
