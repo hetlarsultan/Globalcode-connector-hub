@@ -116,6 +116,11 @@ export function RoomChat({ roomId, roomName, onAvatarClick }: Props) {
           setMessages((prev) => [...prev, ...enriched]);
           if (user && payload.new.user_id !== user.id && Prefs.getSound(user.id)) playPing();
         })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "messages", filter: `room_id=eq.${roomId}` },
+        (payload) => {
+          const upd = payload.new as Message;
+          setMessages((prev) => prev.map((m) => m.id === upd.id ? { ...m, image_url: upd.image_url, content: upd.content } : m));
+        })
       .on("presence", { event: "sync" }, () => {
         const state = ch.presenceState() as Record<string, any[]>;
         const list: PresenceUser[] = [];
