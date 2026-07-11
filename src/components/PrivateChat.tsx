@@ -71,7 +71,15 @@ export function PrivateChat({ otherUser, onBack, onAvatarClick }: Props) {
     return () => { supabase.removeChannel(ch); };
   }, [user, otherUser.id]);
 
-  useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" }); }, [msgs]);
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    if (user && msgs.length) {
+      try {
+        localStorage.setItem(`pm-msgs-${user.id}-${otherUser.id}`, JSON.stringify(msgs.slice(-50)));
+      } catch {}
+    }
+  }, [msgs, user, otherUser.id]);
+
 
   const send = async (imageUrl?: string) => {
     if (!user || (!input.trim() && !imageUrl)) return;
