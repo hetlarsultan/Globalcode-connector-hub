@@ -5,7 +5,7 @@ import { UserAvatar } from "./UserAvatar";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
-import { Send, Image as ImageIcon, X, Users, Sparkles } from "lucide-react";
+import { Send, X, Users, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Prefs, playPing } from "@/lib/local-prefs";
@@ -52,7 +52,7 @@ export function RoomChat({ roomId, roomName, onAvatarClick }: Props) {
   const [sending, setSending] = useState(false);
   const [members, setMembers] = useState<PresenceUser[]>([]);
   const [blocks, setBlocks] = useState<string[]>([]);
-  const fileRef = useRef<HTMLInputElement>(null);
+  
   const scrollRef = useRef<HTMLDivElement>(null);
   const profilesCache = useRef<Map<string, any>>(new Map());
 
@@ -169,19 +169,6 @@ export function RoomChat({ roomId, roomName, onAvatarClick }: Props) {
     else { setInput(""); setReplyTo(null); }
   };
 
-  const uploadImage = async (file: File) => {
-    if (!user) return;
-    if (!file.type.startsWith("image/") || file.type === "image/svg+xml") {
-      return toast.error("نوع الصورة غير مدعوم");
-    }
-    const map: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif", "image/webp": "webp", "image/heic": "heic", "image/heif": "heif" };
-    const ext = map[file.type] || "jpg";
-    const path = `${user.id}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("chat-images").upload(path, file, { contentType: file.type });
-    if (error) return toast.error("فشل رفع الصورة");
-    const { data } = supabase.storage.from("chat-images").getPublicUrl(path);
-    await send(data.publicUrl);
-  };
 
   const insertMention = (username: string) => setInput((p) => `@${username} ${p}`);
 
@@ -296,10 +283,7 @@ export function RoomChat({ roomId, roomName, onAvatarClick }: Props) {
       )}
 
       <form onSubmit={(e) => { e.preventDefault(); send(); }} className="p-3 border-t bg-card/80 backdrop-blur-sm flex gap-2">
-        <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0])} />
-        <Button type="button" variant="ghost" size="icon" onClick={() => fileRef.current?.click()} aria-label="رفع صورة">
-          <ImageIcon className="h-5 w-5" />
-        </Button>
+
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}

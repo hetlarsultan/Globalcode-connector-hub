@@ -47,14 +47,29 @@ export default function AuthPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    const { error } = await signInWithUsername(loginUser, loginPass);
-    setLoading(false);
-    if (error) toast.error("اسم المستخدم أو كلمة المرور غير صحيحة");
-    else {
-      toast.success("مرحباً بعودتك!");
-      navigate("/");
+    const uname = sanitizeUsername(loginUser);
+    if (!uname || uname.length < 3) {
+      return toast.error("اسم المستخدم غير صحيح");
     }
+    if (!loginPass || loginPass.length < 6) {
+      return toast.error("كلمة المرور غير صحيحة (٦ أحرف على الأقل)");
+    }
+    setLoading(true);
+    const { data, error } = await signInWithUsername(uname, loginPass);
+    setLoading(false);
+    if (error || !data?.user) {
+      const msg = (error?.message || "").toLowerCase();
+      if (msg.includes("network") || msg.includes("fetch")) {
+        toast.error("تعذّر الاتصال بالخادم، تحقق من الإنترنت");
+      } else if (msg.includes("not confirmed") || msg.includes("confirm")) {
+        toast.error("الحساب غير مُفعّل بعد");
+      } else {
+        toast.error("بيانات الدخول غير متطابقة — تأكد من اسم المستخدم وكلمة المرور");
+      }
+      return;
+    }
+    toast.success("مرحباً بعودتك!");
+    navigate("/");
   };
 
   const handleSignup = async (e: React.FormEvent) => {
