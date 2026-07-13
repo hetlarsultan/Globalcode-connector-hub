@@ -52,7 +52,7 @@ export function RoomChat({ roomId, roomName, onAvatarClick }: Props) {
   const [sending, setSending] = useState(false);
   const [members, setMembers] = useState<PresenceUser[]>([]);
   const [blocks, setBlocks] = useState<string[]>([]);
-  const fileRef = useRef<HTMLInputElement>(null);
+  
   const scrollRef = useRef<HTMLDivElement>(null);
   const profilesCache = useRef<Map<string, any>>(new Map());
 
