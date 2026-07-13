@@ -47,15 +47,11 @@ export default function AuthPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ageNum = parseInt(loginAge, 10);
-    if (loginAge && (!Number.isFinite(ageNum) || ageNum < 8 || ageNum > 120))
-      return toast.error("الرجاء إدخال عمر صحيح");
     setLoading(true);
-    const { data, error } = await signInWithUsername(loginUser, loginPass);
+    const { error } = await signInWithUsername(loginUser, loginPass);
     setLoading(false);
     if (error) toast.error("اسم المستخدم أو كلمة المرور غير صحيحة");
     else {
-      if (data.user && ageNum) Prefs.setAge(data.user.id, ageNum);
       toast.success("مرحباً بعودتك!");
       navigate("/");
     }
