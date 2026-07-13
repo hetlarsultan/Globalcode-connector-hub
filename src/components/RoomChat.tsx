@@ -296,10 +296,7 @@ export function RoomChat({ roomId, roomName, onAvatarClick }: Props) {
       )}
 
       <form onSubmit={(e) => { e.preventDefault(); send(); }} className="p-3 border-t bg-card/80 backdrop-blur-sm flex gap-2">
-        <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0])} />
-        <Button type="button" variant="ghost" size="icon" onClick={() => fileRef.current?.click()} aria-label="رفع صورة">
-          <ImageIcon className="h-5 w-5" />
-        </Button>
+
         <Input
           value={input}
           onChange={(e) => setInput(e.target.value)}
