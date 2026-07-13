@@ -29,7 +29,6 @@ export default function AuthPage() {
   // login
   const [loginUser, setLoginUser] = useState("");
   const [loginPass, setLoginPass] = useState("");
-  const [loginAge, setLoginAge] = useState("");
 
   // signup
   const [username, setUsername] = useState("");
@@ -48,15 +47,11 @@ export default function AuthPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const ageNum = parseInt(loginAge, 10);
-    if (loginAge && (!Number.isFinite(ageNum) || ageNum < 8 || ageNum > 120))
-      return toast.error("الرجاء إدخال عمر صحيح");
     setLoading(true);
-    const { data, error } = await signInWithUsername(loginUser, loginPass);
+    const { error } = await signInWithUsername(loginUser, loginPass);
     setLoading(false);
     if (error) toast.error("اسم المستخدم أو كلمة المرور غير صحيحة");
     else {
-      if (data.user && ageNum) Prefs.setAge(data.user.id, ageNum);
       toast.success("مرحباً بعودتك!");
       navigate("/");
     }
@@ -133,10 +128,6 @@ export default function AuthPage() {
                 <div className="space-y-2">
                   <Label>كلمة المرور</Label>
                   <Input type="password" value={loginPass} onChange={(e) => setLoginPass(e.target.value)} required />
-                </div>
-                <div className="space-y-2">
-                  <Label>العمر <span className="text-xs text-muted-foreground">(اختياري)</span></Label>
-                  <Input type="number" min={8} max={120} value={loginAge} onChange={(e) => setLoginAge(e.target.value)} placeholder="مثال: 25" />
                 </div>
                 <Button type="submit" className="w-full gradient-primary border-0 shadow-glow" disabled={loading}>
                   {loading ? "جارٍ الدخول..." : "دخول"}
