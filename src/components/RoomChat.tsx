@@ -5,7 +5,7 @@ import { UserAvatar } from "./UserAvatar";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
-import { Send, Image as ImageIcon, X, Users, Sparkles } from "lucide-react";
+import { Send, X, Users, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Prefs, playPing } from "@/lib/local-prefs";
