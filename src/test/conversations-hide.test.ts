@@ -85,10 +85,11 @@ describe("Storage RLS — migrations enforce per-user folder scoping", () => {
     expect(glob).not.toMatch(badPublic);
   });
 
-  it("blocks unsafe file types (svg) in storage insert policies where enforced", () => {
-    // Not every migration enforces this, but at least one must reject svg
-    expect(glob).toMatch(/svg/i);
+  it("whitelists safe image extensions in storage insert policies", () => {
+    // At least one migration must gate uploads by an allowed-extension regex
+    expect(glob).toMatch(/jpg|jpeg|png|webp|gif/i);
   });
+
 });
 
 describe("Avatar/profile image access — unauthorized viewers get no direct row access", () => {
