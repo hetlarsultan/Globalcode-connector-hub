@@ -9,7 +9,17 @@ const K = {
   likes: (targetId: string) => `pref:likes:${targetId}`,
   likedBy: (uid: string) => `pref:likedBy:${uid}`,
   age: (uid: string) => `pref:age:${uid}`,
+  hideConvs: (uid: string) => `pref:hideConvs:${uid}`,
+  hidePass: (uid: string) => `pref:hidePass:${uid}`,
 };
+
+// SHA-256 hex hash for the private-chat unlock password (never store plaintext).
+export async function hashPassword(pw: string): Promise<string> {
+  const buf = new TextEncoder().encode(pw);
+  const digest = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 
 export const Prefs = {
   getSound: (uid: string) => localStorage.getItem(K.sound(uid)) !== "off",
