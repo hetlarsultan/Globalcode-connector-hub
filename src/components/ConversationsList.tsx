@@ -134,21 +134,12 @@ export function ConversationsList({ onOpenChat }: Props) {
           <Search className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden />
           <Input
             aria-label="ابحث في المحادثات"
-            placeholder="ابحث... (اكتب كلمة السر لإظهار المخفية)"
+            placeholder="ابحث..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pr-8"
           />
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          title={hasPassword ? "تغيير/حذف كلمة السر" : "تعيين كلمة السر للإخفاء"}
-          aria-label="إعدادات كلمة السر"
-          onClick={() => setPwDialog(true)}
-        >
-          {hasPassword ? <Lock className="h-4 w-4" /> : <LockOpen className="h-4 w-4" />}
-        </Button>
       </div>
 
       {unlocked && (
