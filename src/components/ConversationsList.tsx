@@ -8,7 +8,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "./ui/alert-dialog";
-import { Lock, LockOpen, Search, EyeOff, Eye, KeyRound } from "lucide-react";
+import { Search, EyeOff, Eye, KeyRound } from "lucide-react";
 import { Prefs, hashPassword } from "@/lib/local-prefs";
 import { toast } from "sonner";
 

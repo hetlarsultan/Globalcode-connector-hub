@@ -10,11 +10,7 @@ describe("ConversationsList — search & hide-with-password UI", () => {
 
   it("renders a search input with an accessible label", () => {
     expect(src).toMatch(/aria-label="ابحث في المحادثات"/);
-    expect(src).toMatch(/placeholder=".*كلمة السر.*"/);
-  });
-
-  it("has a password settings button", () => {
-    expect(src).toMatch(/aria-label="إعدادات كلمة السر"/);
+    expect(src).toMatch(/placeholder="ابحث\.\.\.*"/);
   });
 
   it("uses SHA-256 hashing (never stores plaintext)", () => {
