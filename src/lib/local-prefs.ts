@@ -63,6 +63,23 @@ export const Prefs = {
     return Number.isFinite(v) && v > 0 ? v : 0;
   },
   setAge: (uid: string, age: number) => localStorage.setItem(K.age(uid), String(age)),
+
+  // Hidden private-chat threads unlocked only when the search bar matches the password.
+  getHiddenConvs: (uid: string): string[] => {
+    try { return JSON.parse(localStorage.getItem(K.hideConvs(uid)) || "[]"); } catch { return []; }
+  },
+  isHidden: (uid: string, other: string) => Prefs.getHiddenConvs(uid).includes(other),
+  toggleHiddenConv: (uid: string, other: string) => {
+    const list = Prefs.getHiddenConvs(uid);
+    const next = list.includes(other) ? list.filter((x) => x !== other) : [...list, other];
+    localStorage.setItem(K.hideConvs(uid), JSON.stringify(next));
+    return next.includes(other);
+  },
+  getHidePasswordHash: (uid: string) => localStorage.getItem(K.hidePass(uid)) || "",
+  setHidePasswordHash: (uid: string, hash: string) => {
+    if (hash) localStorage.setItem(K.hidePass(uid), hash);
+    else localStorage.removeItem(K.hidePass(uid));
+  },
 };
 
 export function tierFromLikes(n: number): { label: string; emoji: string; color: string } {
