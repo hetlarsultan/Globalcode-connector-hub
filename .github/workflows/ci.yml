@@ -23,6 +23,17 @@ jobs:
       - name: Run tests with coverage
         run: bun run test:coverage
 
+      - name: Storage RLS regression suite
+        run: bunx vitest run src/test/chat-permissions.test.ts src/test/conversations-hide.test.ts --reporter=verbose
+
+      - name: Grep — no RLS-violation strings left uncaught in code
+        run: |
+          if grep -RIn "violates row-level security" src/ --include="*.ts" --include="*.tsx" | grep -v "src/components/ProfileEditor.tsx" | grep -v "src/test/"; then
+            echo "❌ Unhandled RLS error string outside ProfileEditor/tests"; exit 1
+          fi
+          echo "✅ RLS error handling is centralized"
+
+
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
