@@ -226,6 +226,9 @@ export default function Index() {
       >
         <RefreshCw className={cn("h-5 w-5", checkingUpdate && "animate-spin")} />
       </Button>
+      <Button variant="ghost" size="icon" onClick={() => setShowAds(true)} aria-label="شاهد واربح">
+        <MonitorPlay className="h-5 w-5" />
+      </Button>
       <Button variant="ghost" size="icon" className="relative" onClick={() => setShowOnline(true)} aria-label="الأعضاء المتصلون">
         <Users className="h-5 w-5" />
         {onlineCount > 0 && (
