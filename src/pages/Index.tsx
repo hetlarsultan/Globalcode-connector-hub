@@ -330,6 +330,32 @@ export default function Index() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={showAds} onOpenChange={setShowAds}>
+        <DialogContent className="p-0 max-w-md h-[80vh] flex flex-col overflow-hidden">
+          <DialogHeader className="p-3 border-b">
+            <DialogTitle className="flex items-center gap-2">
+              <MonitorPlay className="h-4 w-4" /> شاهد واربح
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="rounded-xl border bg-card p-4 space-y-3">
+              <div className="aspect-video rounded-lg bg-muted flex items-center justify-center">
+                <MonitorPlay className="h-10 w-10 text-muted-foreground" />
+              </div>
+              <div className="font-semibold">شاهد إعلانًا واكسب نقاطًا</div>
+              <p className="text-sm text-muted-foreground">
+                قريبًا: شاهد مقاطع مختارة واحصل على مكافآت داخل التطبيق.
+              </p>
+              <Button className="w-full" disabled>شاهد الآن</Button>
+            </div>
+            <div className="rounded-xl border bg-card p-4 space-y-3">
+              <div className="font-semibold">رصيدك الحالي</div>
+              <div className="text-3xl font-bold text-primary">0 <span className="text-sm font-normal text-muted-foreground">نقطة</span></div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <IncomingCallListener />
     </div>
   );
