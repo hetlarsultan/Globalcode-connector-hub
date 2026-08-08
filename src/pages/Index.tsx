@@ -43,6 +43,7 @@ export default function Index() {
   const [onlineCount, setOnlineCount] = useState(0);
   const [showOnline, setShowOnline] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [showAds, setShowAds] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth");
