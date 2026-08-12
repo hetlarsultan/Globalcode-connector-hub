@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Menu, MessageCircle, Users, UserCog, Hash, Bell, UserPlus, RefreshCw, MonitorPlay } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { checkForUpdate } from "@/lib/register-sw";
@@ -211,63 +212,100 @@ export default function Index() {
 
   // Top quick-action bar inside the main chat area
   const QuickBar = activeRoom && !activePrivate ? (
-    <div className="flex items-center justify-end gap-1 px-3 py-2 border-b bg-card/60 backdrop-blur-sm">
-      <Button
-        variant="ghost"
-        className="h-auto flex-col gap-0.5 px-2 py-1"
-        aria-label="التحقق من التحديثات"
-        disabled={checkingUpdate}
-        onClick={async () => {
-          setCheckingUpdate(true);
-          const found = await checkForUpdate();
-          setCheckingUpdate(false);
-          if (!found) toast.success("أنت تستخدم أحدث إصدار");
-        }}
-      >
-        <RefreshCw className={cn("h-5 w-5", checkingUpdate && "animate-spin")} />
-        <span className="text-[10px] leading-none">تحديث</span>
-      </Button>
-      <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1" onClick={() => setShowAds(true)} aria-label="شاهد واربح">
-        <MonitorPlay className="h-5 w-5" />
-        <span className="text-[10px] leading-none">شاهد واربح</span>
-      </Button>
-      <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1 relative" onClick={() => setShowOnline(true)} aria-label="الأعضاء المتصلون">
-        <Users className="h-5 w-5" />
-        <span className="text-[10px] leading-none">المتصلون</span>
-        {onlineCount > 0 && (
-          <span className="absolute top-0 right-0 h-4 min-w-4 px-1 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center">
-            {onlineCount}
-          </span>
-        )}
-      </Button>
-      <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1 relative" onClick={() => openTab("pm")} aria-label="الرسائل الخاصة">
-        <MessageCircle className="h-5 w-5" />
-        <span className="text-[10px] leading-none">الرسائل</span>
-        {unreadTotal > 0 && (
-          <span className="absolute top-0 right-0 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
-            {unreadTotal}
-          </span>
-        )}
-      </Button>
-      <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1 relative" onClick={() => openTab("friends")} aria-label="الأصدقاء">
-        <UserPlus className="h-5 w-5" />
-        <span className="text-[10px] leading-none">الأصدقاء</span>
-        {friendReqCount > 0 && (
-          <span className="absolute top-0 right-0 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
-            {friendReqCount}
-          </span>
-        )}
-      </Button>
-      <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1 relative" onClick={() => openTab("friends")} aria-label="الإشعارات">
-        <Bell className="h-5 w-5" />
-        <span className="text-[10px] leading-none">الإشعارات</span>
-        {notifCount > 0 && (
-          <span className="absolute top-0 right-0 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
-            {notifCount}
-          </span>
-        )}
-      </Button>
-    </div>
+    <TooltipProvider delayDuration={200}>
+      <div className="flex items-center justify-end gap-1 px-3 py-2 border-b bg-card/60 backdrop-blur-sm">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              className="h-auto flex-col gap-0.5 px-2 py-1"
+              aria-label="التحقق من التحديثات"
+              disabled={checkingUpdate}
+              onClick={async () => {
+                setCheckingUpdate(true);
+                const found = await checkForUpdate();
+                setCheckingUpdate(false);
+                if (!found) toast.success("أنت تستخدم أحدث إصدار");
+              }}
+            >
+              <RefreshCw className={cn("h-5 w-5", checkingUpdate && "animate-spin")} />
+              <span className="text-[10px] leading-none">تحديث</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>التحقق من وجود إصدار جديد للتطبيق</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1" onClick={() => setShowAds(true)} aria-label="شاهد واربح">
+              <MonitorPlay className="h-5 w-5" />
+              <span className="text-[10px] leading-none">شاهد واربح</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>شاهد الإعلانات واكسب نقاطًا داخل التطبيق</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1 relative" onClick={() => setShowOnline(true)} aria-label="الأعضاء المتصلون">
+              <Users className="h-5 w-5" />
+              <span className="text-[10px] leading-none">المتصلون</span>
+              {onlineCount > 0 && (
+                <span className="absolute top-0 right-0 h-4 min-w-4 px-1 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center">
+                  {onlineCount}
+                </span>
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>عرض الأعضاء المتصلين حاليًا والبحث عنهم</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1 relative" onClick={() => openTab("pm")} aria-label="الرسائل الخاصة">
+              <MessageCircle className="h-5 w-5" />
+              <span className="text-[10px] leading-none">الرسائل</span>
+              {unreadTotal > 0 && (
+                <span className="absolute top-0 right-0 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+                  {unreadTotal}
+                </span>
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>فتح المحادثات الخاصة والرسائل غير المقروءة</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1 relative" onClick={() => openTab("friends")} aria-label="الأصدقاء">
+              <UserPlus className="h-5 w-5" />
+              <span className="text-[10px] leading-none">الأصدقاء</span>
+              {friendReqCount > 0 && (
+                <span className="absolute top-0 right-0 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+                  {friendReqCount}
+                </span>
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>قائمة الأصدقاء وطلبات الصداقة</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1 relative" onClick={() => openTab("friends")} aria-label="الإشعارات">
+              <Bell className="h-5 w-5" />
+              <span className="text-[10px] leading-none">الإشعارات</span>
+              {notifCount > 0 && (
+                <span className="absolute top-0 right-0 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+                  {notifCount}
+                </span>
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>كل الإشعارات: رسائل جديدة وطلبات صداقة</TooltipContent>
+        </Tooltip>
+      </div>
+    </TooltipProvider>
   ) : null;
 
 
