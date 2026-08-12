@@ -214,7 +214,7 @@ export default function Index() {
     <div className="flex items-center justify-end gap-1 px-3 py-2 border-b bg-card/60 backdrop-blur-sm">
       <Button
         variant="ghost"
-        size="icon"
+        className="h-auto flex-col gap-0.5 px-2 py-1"
         aria-label="التحقق من التحديثات"
         disabled={checkingUpdate}
         onClick={async () => {
@@ -225,44 +225,51 @@ export default function Index() {
         }}
       >
         <RefreshCw className={cn("h-5 w-5", checkingUpdate && "animate-spin")} />
+        <span className="text-[10px] leading-none">تحديث</span>
       </Button>
-      <Button variant="ghost" size="icon" onClick={() => setShowAds(true)} aria-label="شاهد واربح">
+      <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1" onClick={() => setShowAds(true)} aria-label="شاهد واربح">
         <MonitorPlay className="h-5 w-5" />
+        <span className="text-[10px] leading-none">شاهد واربح</span>
       </Button>
-      <Button variant="ghost" size="icon" className="relative" onClick={() => setShowOnline(true)} aria-label="الأعضاء المتصلون">
+      <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1 relative" onClick={() => setShowOnline(true)} aria-label="الأعضاء المتصلون">
         <Users className="h-5 w-5" />
+        <span className="text-[10px] leading-none">المتصلون</span>
         {onlineCount > 0 && (
-          <span className="absolute top-0.5 right-0.5 h-4 min-w-4 px-1 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center">
+          <span className="absolute top-0 right-0 h-4 min-w-4 px-1 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center">
             {onlineCount}
           </span>
         )}
       </Button>
-      <Button variant="ghost" size="icon" className="relative" onClick={() => openTab("pm")} aria-label="الرسائل الخاصة">
+      <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1 relative" onClick={() => openTab("pm")} aria-label="الرسائل الخاصة">
         <MessageCircle className="h-5 w-5" />
+        <span className="text-[10px] leading-none">الرسائل</span>
         {unreadTotal > 0 && (
-          <span className="absolute top-0.5 right-0.5 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+          <span className="absolute top-0 right-0 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
             {unreadTotal}
           </span>
         )}
       </Button>
-      <Button variant="ghost" size="icon" className="relative" onClick={() => openTab("friends")} aria-label="الأصدقاء">
+      <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1 relative" onClick={() => openTab("friends")} aria-label="الأصدقاء">
         <UserPlus className="h-5 w-5" />
+        <span className="text-[10px] leading-none">الأصدقاء</span>
         {friendReqCount > 0 && (
-          <span className="absolute top-0.5 right-0.5 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+          <span className="absolute top-0 right-0 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
             {friendReqCount}
           </span>
         )}
       </Button>
-      <Button variant="ghost" size="icon" className="relative" onClick={() => openTab("friends")} aria-label="الإشعارات">
+      <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1 relative" onClick={() => openTab("friends")} aria-label="الإشعارات">
         <Bell className="h-5 w-5" />
+        <span className="text-[10px] leading-none">الإشعارات</span>
         {notifCount > 0 && (
-          <span className="absolute top-0.5 right-0.5 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
+          <span className="absolute top-0 right-0 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
             {notifCount}
           </span>
         )}
       </Button>
     </div>
   ) : null;
+
 
   return (
     <div className="h-screen flex bg-background overflow-hidden">
