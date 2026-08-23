@@ -12,7 +12,32 @@ const K = {
   hideConvs: (uid: string) => `pref:hideConvs:${uid}`,
   hidePass: (uid: string) => `pref:hidePass:${uid}`,
   points: (uid: string) => `pref:points:${uid}`,
+  pointsLog: (uid: string) => `pref:pointsLog:${uid}`,
 };
+
+export interface PointsEntry {
+  at: number;
+  delta: number;
+  balance: number;
+  reason: string;
+}
+
+const POINTS_EVENT = "prefs:points";
+
+function emitPoints(uid: string, balance: number) {
+  window.dispatchEvent(new CustomEvent(POINTS_EVENT, { detail: { uid, balance } }));
+}
+
+/** Subscribe to live points updates for a user. Returns an unsubscribe fn. */
+export function subscribePoints(uid: string, cb: (balance: number) => void) {
+  const handler = (e: Event) => {
+    const d = (e as CustomEvent).detail as { uid: string; balance: number };
+    if (d?.uid === uid) cb(d.balance);
+  };
+  window.addEventListener(POINTS_EVENT, handler);
+  return () => window.removeEventListener(POINTS_EVENT, handler);
+}
+
 
 // SHA-256 hex hash for the private-chat unlock password (never store plaintext).
 export async function hashPassword(pw: string): Promise<string> {
