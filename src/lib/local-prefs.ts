@@ -81,11 +81,23 @@ export const Prefs = {
     const v = parseInt(localStorage.getItem(K.points(uid)) || "0", 10);
     return Number.isFinite(v) && v > 0 ? v : 0;
   },
-  addPoints: (uid: string, n: number) => {
+  addPoints: (uid: string, n: number, reason = "إضافة نقاط") => {
     const next = Math.max(0, Prefs.getPoints(uid) + n);
     localStorage.setItem(K.points(uid), String(next));
+    Prefs.pushPointsEntry(uid, { at: Date.now(), delta: n, balance: next, reason });
+    emitPoints(uid, next);
     return next;
   },
+
+  getPointsHistory: (uid: string): PointsEntry[] => {
+    try { return JSON.parse(localStorage.getItem(K.pointsLog(uid)) || "[]"); } catch { return []; }
+  },
+  pushPointsEntry: (uid: string, entry: PointsEntry) => {
+    const list = [entry, ...Prefs.getPointsHistory(uid)].slice(0, 200);
+    localStorage.setItem(K.pointsLog(uid), JSON.stringify(list));
+  },
+  clearPointsHistory: (uid: string) => localStorage.removeItem(K.pointsLog(uid)),
+
 
   getHidePasswordHash: (uid: string) => localStorage.getItem(K.hidePass(uid)) || "",
   setHidePasswordHash: (uid: string, hash: string) => {
