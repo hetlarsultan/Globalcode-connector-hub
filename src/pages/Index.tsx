@@ -449,7 +449,7 @@ export default function Index() {
             </div>
             <div className="rounded-xl border bg-card p-4 space-y-3">
               <div className="font-semibold">رصيدك الحالي</div>
-              <div className="text-3xl font-bold text-primary">0 <span className="text-sm font-normal text-muted-foreground">نقطة</span></div>
+              <div className="text-3xl font-bold text-primary">{points} <span className="text-sm font-normal text-muted-foreground">نقطة</span></div>
             </div>
           </div>
         </DialogContent>
