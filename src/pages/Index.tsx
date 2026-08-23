@@ -20,7 +20,7 @@ import { Menu, MessageCircle, Users, UserCog, Hash, Bell, UserPlus, RefreshCw, M
 import { cn } from "@/lib/utils";
 import { checkForUpdate } from "@/lib/register-sw";
 import { toast } from "sonner";
-import { Prefs } from "@/lib/local-prefs";
+import { Prefs, subscribePoints } from "@/lib/local-prefs";
 
 const ProfileEditor = lazy(() =>
   import("@/components/ProfileEditor").then((m) => ({ default: m.ProfileEditor })),
@@ -47,6 +47,8 @@ export default function Index() {
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [showAds, setShowAds] = useState(false);
   const [points, setPoints] = useState(0);
+  const [adWatching, setAdWatching] = useState(false);
+  const [adLeft, setAdLeft] = useState(5);
   const runUpdateCheckRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
@@ -144,8 +146,28 @@ export default function Index() {
   }, [user, showOnline]);
 
   useEffect(() => {
-    if (user) setPoints(Prefs.getPoints(user.id));
-  }, [user, showAds]);
+    if (!user) return;
+    setPoints(Prefs.getPoints(user.id));
+    return subscribePoints(user.id, setPoints);
+  }, [user]);
+
+  // Simulated ad playback: award points only when the countdown completes.
+  useEffect(() => {
+    if (!adWatching) return;
+    if (adLeft <= 0) {
+      setAdWatching(false);
+      if (user) {
+        const next = Prefs.addPoints(user.id, 10, "مشاهدة إعلان كاملة");
+        toast.success("اكتملت مشاهدة الإعلان — حصلت على 10 نقاط", {
+          description: `رصيدك الآن ${next} نقطة`,
+        });
+      }
+      return;
+    }
+    const t = setTimeout(() => setAdLeft((v) => v - 1), 1000);
+    return () => clearTimeout(t);
+  }, [adWatching, adLeft, user]);
+
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {

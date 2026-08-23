@@ -12,7 +12,32 @@ const K = {
   hideConvs: (uid: string) => `pref:hideConvs:${uid}`,
   hidePass: (uid: string) => `pref:hidePass:${uid}`,
   points: (uid: string) => `pref:points:${uid}`,
+  pointsLog: (uid: string) => `pref:pointsLog:${uid}`,
 };
+
+export interface PointsEntry {
+  at: number;
+  delta: number;
+  balance: number;
+  reason: string;
+}
+
+const POINTS_EVENT = "prefs:points";
+
+function emitPoints(uid: string, balance: number) {
+  window.dispatchEvent(new CustomEvent(POINTS_EVENT, { detail: { uid, balance } }));
+}
+
+/** Subscribe to live points updates for a user. Returns an unsubscribe fn. */
+export function subscribePoints(uid: string, cb: (balance: number) => void) {
+  const handler = (e: Event) => {
+    const d = (e as CustomEvent).detail as { uid: string; balance: number };
+    if (d?.uid === uid) cb(d.balance);
+  };
+  window.addEventListener(POINTS_EVENT, handler);
+  return () => window.removeEventListener(POINTS_EVENT, handler);
+}
+
 
 // SHA-256 hex hash for the private-chat unlock password (never store plaintext).
 export async function hashPassword(pw: string): Promise<string> {
@@ -81,11 +106,23 @@ export const Prefs = {
     const v = parseInt(localStorage.getItem(K.points(uid)) || "0", 10);
     return Number.isFinite(v) && v > 0 ? v : 0;
   },
-  addPoints: (uid: string, n: number) => {
+  addPoints: (uid: string, n: number, reason = "إضافة نقاط") => {
     const next = Math.max(0, Prefs.getPoints(uid) + n);
     localStorage.setItem(K.points(uid), String(next));
+    Prefs.pushPointsEntry(uid, { at: Date.now(), delta: n, balance: next, reason });
+    emitPoints(uid, next);
     return next;
   },
+
+  getPointsHistory: (uid: string): PointsEntry[] => {
+    try { return JSON.parse(localStorage.getItem(K.pointsLog(uid)) || "[]"); } catch { return []; }
+  },
+  pushPointsEntry: (uid: string, entry: PointsEntry) => {
+    const list = [entry, ...Prefs.getPointsHistory(uid)].slice(0, 200);
+    localStorage.setItem(K.pointsLog(uid), JSON.stringify(list));
+  },
+  clearPointsHistory: (uid: string) => localStorage.removeItem(K.pointsLog(uid)),
+
 
   getHidePasswordHash: (uid: string) => localStorage.getItem(K.hidePass(uid)) || "",
   setHidePasswordHash: (uid: string, hash: string) => {
