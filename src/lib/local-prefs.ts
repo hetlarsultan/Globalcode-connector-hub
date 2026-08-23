@@ -11,6 +11,7 @@ const K = {
   age: (uid: string) => `pref:age:${uid}`,
   hideConvs: (uid: string) => `pref:hideConvs:${uid}`,
   hidePass: (uid: string) => `pref:hidePass:${uid}`,
+  points: (uid: string) => `pref:points:${uid}`,
 };
 
 // SHA-256 hex hash for the private-chat unlock password (never store plaintext).
@@ -75,6 +76,17 @@ export const Prefs = {
     localStorage.setItem(K.hideConvs(uid), JSON.stringify(next));
     return next.includes(other);
   },
+  // "شاهد واربح" reward points (local for now).
+  getPoints: (uid: string) => {
+    const v = parseInt(localStorage.getItem(K.points(uid)) || "0", 10);
+    return Number.isFinite(v) && v > 0 ? v : 0;
+  },
+  addPoints: (uid: string, n: number) => {
+    const next = Math.max(0, Prefs.getPoints(uid) + n);
+    localStorage.setItem(K.points(uid), String(next));
+    return next;
+  },
+
   getHidePasswordHash: (uid: string) => localStorage.getItem(K.hidePass(uid)) || "",
   setHidePasswordHash: (uid: string, hash: string) => {
     if (hash) localStorage.setItem(K.hidePass(uid), hash);
