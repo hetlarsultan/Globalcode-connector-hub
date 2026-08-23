@@ -210,100 +210,121 @@ export default function Index() {
     </div>
   );
 
+  const QuickAction = ({
+    icon,
+    label,
+    tip,
+    shortcut,
+    onClick,
+    badge,
+    badgeClass,
+    active,
+    loading,
+  }: {
+    icon: React.ReactNode;
+    label: string;
+    tip: string;
+    shortcut?: string;
+    onClick: () => void;
+    badge?: number;
+    badgeClass?: string;
+    active?: boolean;
+    loading?: boolean;
+  }) => (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          aria-label={label}
+          aria-pressed={!!active}
+          aria-busy={!!loading}
+          disabled={loading}
+          onClick={onClick}
+          className={cn(
+            "h-auto flex-col gap-0.5 px-2 py-1 relative transition-all active:scale-95",
+            active && "bg-accent text-accent-foreground ring-1 ring-primary/40",
+            loading && "opacity-70",
+          )}
+        >
+          {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : icon}
+          <span className="text-[10px] leading-none">{label}</span>
+          {typeof badge === "number" && badge > 0 && (
+            <span className={cn(
+              "absolute top-0 right-0 h-4 min-w-4 px-1 rounded-full text-[9px] font-bold flex items-center justify-center",
+              badgeClass || "bg-destructive text-destructive-foreground",
+            )}>
+              {badge > 99 ? "99+" : badge}
+            </span>
+          )}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent className="flex items-center gap-2">
+        <span>{tip}</span>
+        {shortcut && (
+          <kbd className="rounded border border-border/60 bg-muted px-1 py-0.5 text-[10px] font-mono">{shortcut}</kbd>
+        )}
+      </TooltipContent>
+    </Tooltip>
+  );
+
   // Top quick-action bar inside the main chat area
   const QuickBar = activeRoom && !activePrivate ? (
     <TooltipProvider delayDuration={200}>
       <div className="flex items-center justify-end gap-1 px-3 py-2 border-b bg-card/60 backdrop-blur-sm">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              className="h-auto flex-col gap-0.5 px-2 py-1"
-              aria-label="التحقق من التحديثات"
-              disabled={checkingUpdate}
-              onClick={async () => {
-                setCheckingUpdate(true);
-                const found = await checkForUpdate();
-                setCheckingUpdate(false);
-                if (!found) toast.success("أنت تستخدم أحدث إصدار");
-              }}
-            >
-              <RefreshCw className={cn("h-5 w-5", checkingUpdate && "animate-spin")} />
-              <span className="text-[10px] leading-none">تحديث</span>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>التحقق من وجود إصدار جديد للتطبيق</TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1" onClick={() => setShowAds(true)} aria-label="شاهد واربح">
-              <MonitorPlay className="h-5 w-5" />
-              <span className="text-[10px] leading-none">شاهد واربح</span>
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>شاهد الإعلانات واكسب نقاطًا داخل التطبيق</TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1 relative" onClick={() => setShowOnline(true)} aria-label="الأعضاء المتصلون">
-              <Users className="h-5 w-5" />
-              <span className="text-[10px] leading-none">المتصلون</span>
-              {onlineCount > 0 && (
-                <span className="absolute top-0 right-0 h-4 min-w-4 px-1 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center">
-                  {onlineCount}
-                </span>
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>عرض الأعضاء المتصلين حاليًا والبحث عنهم</TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1 relative" onClick={() => openTab("pm")} aria-label="الرسائل الخاصة">
-              <MessageCircle className="h-5 w-5" />
-              <span className="text-[10px] leading-none">الرسائل</span>
-              {unreadTotal > 0 && (
-                <span className="absolute top-0 right-0 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
-                  {unreadTotal}
-                </span>
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>فتح المحادثات الخاصة والرسائل غير المقروءة</TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1 relative" onClick={() => openTab("friends")} aria-label="الأصدقاء">
-              <UserPlus className="h-5 w-5" />
-              <span className="text-[10px] leading-none">الأصدقاء</span>
-              {friendReqCount > 0 && (
-                <span className="absolute top-0 right-0 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
-                  {friendReqCount}
-                </span>
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>قائمة الأصدقاء وطلبات الصداقة</TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" className="h-auto flex-col gap-0.5 px-2 py-1 relative" onClick={() => openTab("friends")} aria-label="الإشعارات">
-              <Bell className="h-5 w-5" />
-              <span className="text-[10px] leading-none">الإشعارات</span>
-              {notifCount > 0 && (
-                <span className="absolute top-0 right-0 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center">
-                  {notifCount}
-                </span>
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>كل الإشعارات: رسائل جديدة وطلبات صداقة</TooltipContent>
-        </Tooltip>
+        <QuickAction
+          icon={<RefreshCw className="h-5 w-5" />}
+          label="تحديث"
+          tip="التحقق من وجود إصدار جديد للتطبيق"
+          shortcut="Alt+U"
+          loading={checkingUpdate}
+          onClick={runUpdateCheck}
+        />
+        <QuickAction
+          icon={<MonitorPlay className="h-5 w-5" />}
+          label="شاهد واربح"
+          tip={`شاهد الإعلانات واكسب نقاطًا — رصيدك: ${points} نقطة`}
+          shortcut="Alt+W"
+          badge={points}
+          badgeClass="bg-amber-500 text-white"
+          active={showAds}
+          onClick={() => setShowAds(true)}
+        />
+        <QuickAction
+          icon={<Users className="h-5 w-5" />}
+          label="المتصلون"
+          tip="عرض الأعضاء المتصلين حاليًا والبحث عنهم"
+          shortcut="Alt+O"
+          badge={onlineCount}
+          badgeClass="bg-emerald-500 text-white"
+          active={showOnline}
+          onClick={() => setShowOnline(true)}
+        />
+        <QuickAction
+          icon={<MessageCircle className="h-5 w-5" />}
+          label="الرسائل"
+          tip="فتح المحادثات الخاصة والرسائل غير المقروءة"
+          shortcut="Alt+M"
+          badge={unreadTotal}
+          active={mobileSheetOpen && sidebarTab === "pm"}
+          onClick={() => openTab("pm")}
+        />
+        <QuickAction
+          icon={<UserPlus className="h-5 w-5" />}
+          label="الأصدقاء"
+          tip="قائمة الأصدقاء وطلبات الصداقة"
+          shortcut="Alt+F"
+          badge={friendReqCount}
+          active={mobileSheetOpen && sidebarTab === "friends"}
+          onClick={() => openTab("friends")}
+        />
+        <QuickAction
+          icon={<Bell className="h-5 w-5" />}
+          label="الإشعارات"
+          tip="كل الإشعارات: رسائل جديدة وطلبات صداقة"
+          shortcut="Alt+N"
+          badge={notifCount}
+          onClick={() => openTab("friends")}
+        />
       </div>
     </TooltipProvider>
   ) : null;
