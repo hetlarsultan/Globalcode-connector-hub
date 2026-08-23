@@ -11,6 +11,7 @@ const K = {
   age: (uid: string) => `pref:age:${uid}`,
   hideConvs: (uid: string) => `pref:hideConvs:${uid}`,
   hidePass: (uid: string) => `pref:hidePass:${uid}`,
+  points: (uid: string) => `pref:points:${uid}`,
 };
 
 // SHA-256 hex hash for the private-chat unlock password (never store plaintext).
