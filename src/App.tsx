@@ -9,6 +9,7 @@ import { UpdatePrompt } from "@/components/UpdatePrompt";
 
 const Index = lazy(() => import("./pages/Index.tsx"));
 const Auth = lazy(() => import("./pages/Auth.tsx"));
+const Points = lazy(() => import("./pages/Points.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 const queryClient = new QueryClient({
@@ -39,7 +40,9 @@ const App = () => (
           <Suspense fallback={<Fallback />}>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/points" element={<Points />} />
               <Route path="/auth" element={<Auth />} />
+
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
