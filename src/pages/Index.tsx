@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,10 +16,11 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Menu, MessageCircle, Users, UserCog, Hash, Bell, UserPlus, RefreshCw, MonitorPlay } from "lucide-react";
+import { Menu, MessageCircle, Users, UserCog, Hash, Bell, UserPlus, RefreshCw, MonitorPlay, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { checkForUpdate } from "@/lib/register-sw";
 import { toast } from "sonner";
+import { Prefs } from "@/lib/local-prefs";
 
 const ProfileEditor = lazy(() =>
   import("@/components/ProfileEditor").then((m) => ({ default: m.ProfileEditor })),
@@ -45,6 +46,8 @@ export default function Index() {
   const [showOnline, setShowOnline] = useState(false);
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [showAds, setShowAds] = useState(false);
+  const [points, setPoints] = useState(0);
+  const runUpdateCheckRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
     if (!loading && !user) navigate("/auth");
@@ -140,6 +143,28 @@ export default function Index() {
     };
   }, [user, showOnline]);
 
+  useEffect(() => {
+    if (user) setPoints(Prefs.getPoints(user.id));
+  }, [user, showAds]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!e.altKey || e.ctrlKey || e.metaKey) return;
+      const map: Record<string, () => void> = {
+        u: () => { void runUpdateCheckRef.current?.(); },
+        w: () => setShowAds(true),
+        o: () => setShowOnline(true),
+        m: () => { setSidebarTab("pm"); setMobileSheetOpen(true); },
+        f: () => { setSidebarTab("friends"); setMobileSheetOpen(true); },
+        n: () => { setSidebarTab("friends"); setMobileSheetOpen(true); },
+      };
+      const fn = map[e.key.toLowerCase()];
+      if (fn) { e.preventDefault(); fn(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
   if (loading || !user || !profile) {
     return <div className="min-h-screen flex items-center justify-center gradient-hero"><div className="animate-pulse-dot text-primary">جارٍ التحميل...</div></div>;
   }
@@ -150,6 +175,14 @@ export default function Index() {
   };
 
   const notifCount = unreadTotal + friendReqCount;
+
+  const runUpdateCheck = async () => {
+    setCheckingUpdate(true);
+    const found = await checkForUpdate();
+    setCheckingUpdate(false);
+    if (!found) toast.success("أنت تستخدم أحدث إصدار");
+  };
+  runUpdateCheckRef.current = runUpdateCheck;
 
   const Sidebar = (
     <div className="h-full flex flex-col bg-card border-l">
