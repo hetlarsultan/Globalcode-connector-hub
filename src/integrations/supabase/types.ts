@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_reward_transactions: {
+        Row: {
+          ad_network: string
+          created_at: string
+          credit_status: string
+          credited_at: string | null
+          gross_value: number
+          id: string
+          reward_rate: number
+          reward_value: number
+          transaction_id: string
+          updated_at: string
+          user_id: string
+          verification_status: string
+          verified_at: string | null
+        }
+        Insert: {
+          ad_network?: string
+          created_at?: string
+          credit_status?: string
+          credited_at?: string | null
+          gross_value?: number
+          id?: string
+          reward_rate?: number
+          reward_value?: number
+          transaction_id: string
+          updated_at?: string
+          user_id: string
+          verification_status?: string
+          verified_at?: string | null
+        }
+        Update: {
+          ad_network?: string
+          created_at?: string
+          credit_status?: string
+          credited_at?: string | null
+          gross_value?: number
+          id?: string
+          reward_rate?: number
+          reward_value?: number
+          transaction_id?: string
+          updated_at?: string
+          user_id?: string
+          verification_status?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       banned_words: {
         Row: {
           created_at: string
@@ -269,6 +317,27 @@ export type Database = {
         }
         Relationships: []
       }
+      wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -276,6 +345,18 @@ export type Database = {
     Functions: {
       consume_message_image: { Args: { p_id: string }; Returns: undefined }
       consume_pm_image: { Args: { p_id: string }; Returns: undefined }
+      credit_ad_reward: {
+        Args: {
+          p_ad_network?: string
+          p_gross_value: number
+          p_transaction_id: string
+          p_user_id: string
+        }
+        Returns: {
+          credited: boolean
+          reward_value: number
+        }[]
+      }
       get_my_age: { Args: never; Returns: number }
       mark_pm_read: { Args: { p_id: string }; Returns: undefined }
       mark_pm_thread_read: { Args: { p_sender: string }; Returns: undefined }

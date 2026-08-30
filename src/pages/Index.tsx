@@ -11,6 +11,7 @@ import { ConversationsList } from "@/components/ConversationsList";
 import { UserCard } from "@/components/UserCard";
 import { IncomingCallListener } from "@/components/IncomingCallListener";
 import { UserAvatar } from "@/components/UserAvatar";
+import { RewardedAdPanel } from "@/components/RewardedAdPanel";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,8 +48,6 @@ export default function Index() {
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [showAds, setShowAds] = useState(false);
   const [points, setPoints] = useState(0);
-  const [adWatching, setAdWatching] = useState(false);
-  const [adLeft, setAdLeft] = useState(5);
   const runUpdateCheckRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
@@ -151,22 +150,6 @@ export default function Index() {
     return subscribePoints(user.id, setPoints);
   }, [user]);
 
-  // Simulated ad playback: award points only when the countdown completes.
-  useEffect(() => {
-    if (!adWatching) return;
-    if (adLeft <= 0) {
-      setAdWatching(false);
-      if (user) {
-        const next = Prefs.addPoints(user.id, 10, "مشاهدة إعلان كاملة");
-        toast.success("اكتملت مشاهدة الإعلان — حصلت على 10 نقاط", {
-          description: `رصيدك الآن ${next} نقطة`,
-        });
-      }
-      return;
-    }
-    const t = setTimeout(() => setAdLeft((v) => v - 1), 1000);
-    return () => clearTimeout(t);
-  }, [adWatching, adLeft, user]);
 
 
   useEffect(() => {
@@ -458,21 +441,8 @@ export default function Index() {
               <MonitorPlay className="h-4 w-4" /> شاهد واربح
             </DialogTitle>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            <div className="rounded-xl border bg-card p-4 space-y-3">
-              <div className="aspect-video rounded-lg bg-muted flex items-center justify-center">
-                <MonitorPlay className="h-10 w-10 text-muted-foreground" />
-              </div>
-              <div className="font-semibold">شاهد إعلانًا واكسب نقاطًا</div>
-              <p className="text-sm text-muted-foreground">
-                قريبًا: شاهد مقاطع مختارة واحصل على مكافآت داخل التطبيق.
-              </p>
-              <Button className="w-full" disabled>شاهد الآن</Button>
-            </div>
-            <div className="rounded-xl border bg-card p-4 space-y-3">
-              <div className="font-semibold">رصيدك الحالي</div>
-              <div className="text-3xl font-bold text-primary">{points} <span className="text-sm font-normal text-muted-foreground">نقطة</span></div>
-            </div>
+          <div className="flex-1 overflow-y-auto p-4">
+            {user && <RewardedAdPanel userId={user.id} />}
           </div>
         </DialogContent>
       </Dialog>
