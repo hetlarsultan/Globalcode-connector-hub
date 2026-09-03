@@ -14,9 +14,43 @@ export type Database = {
   }
   public: {
     Tables: {
+      ad_placements: {
+        Row: {
+          ad_type: string
+          created_at: string
+          gross_value: number
+          id: string
+          is_active: boolean
+          label: string
+          reward_rate: number
+          updated_at: string
+        }
+        Insert: {
+          ad_type: string
+          created_at?: string
+          gross_value?: number
+          id?: string
+          is_active?: boolean
+          label: string
+          reward_rate?: number
+          updated_at?: string
+        }
+        Update: {
+          ad_type?: string
+          created_at?: string
+          gross_value?: number
+          id?: string
+          is_active?: boolean
+          label?: string
+          reward_rate?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       ad_reward_transactions: {
         Row: {
           ad_network: string
+          ad_type: string
           created_at: string
           credit_status: string
           credited_at: string | null
@@ -32,6 +66,7 @@ export type Database = {
         }
         Insert: {
           ad_network?: string
+          ad_type?: string
           created_at?: string
           credit_status?: string
           credited_at?: string | null
@@ -47,6 +82,7 @@ export type Database = {
         }
         Update: {
           ad_network?: string
+          ad_type?: string
           created_at?: string
           credit_status?: string
           credited_at?: string | null
@@ -348,6 +384,7 @@ export type Database = {
       credit_ad_reward: {
         Args: {
           p_ad_network?: string
+          p_ad_type?: string
           p_gross_value: number
           p_transaction_id: string
           p_user_id: string

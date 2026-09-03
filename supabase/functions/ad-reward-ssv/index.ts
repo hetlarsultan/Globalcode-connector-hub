@@ -35,6 +35,7 @@ Deno.serve(async (req) => {
     const rewardAmountRaw = params.reward_amount ?? "";
     const signature = params.signature ?? "";
     const network = params.ad_network || "rewarded";
+    const adType = (params.ad_type || "rewarded_video").slice(0, 64);
 
     const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const grossValue = Number(rewardAmountRaw);
@@ -74,6 +75,7 @@ Deno.serve(async (req) => {
       p_transaction_id: transactionId,
       p_gross_value: grossValue,
       p_ad_network: network,
+      p_ad_type: adType,
     });
 
     if (error) {
