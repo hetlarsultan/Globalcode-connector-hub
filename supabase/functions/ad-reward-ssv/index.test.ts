@@ -12,8 +12,12 @@ const canRun = !!SUPABASE_URL && !!SERVICE_KEY && !!SECRET;
 Deno.test({
   name: "SSV: replaying the same transaction_id credits the wallet only once",
   ignore: !canRun,
+  sanitizeResources: false,
+  sanitizeOps: false,
   async fn() {
-    const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+    const admin = createClient(SUPABASE_URL, SERVICE_KEY, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
 
     const { data: users } = await admin.auth.admin.listUsers({ page: 1, perPage: 1 });
     const userId = users?.users?.[0]?.id as string;
