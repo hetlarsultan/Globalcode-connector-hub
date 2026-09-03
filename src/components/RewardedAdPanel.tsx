@@ -126,7 +126,13 @@ export function RewardedAdPanel({ userId, onBalanceChange }: Props) {
           الإعلانات، ثم تُضاف حصتك (25%) إلى محفظتك داخل التطبيق.
         </p>
 
-        <Button className="w-full" onClick={watch} disabled={busy}>
+        <Button
+          className="w-full disabled:cursor-not-allowed disabled:opacity-70"
+          onClick={watch}
+          disabled={busy}
+          aria-busy={busy}
+          aria-disabled={busy}
+        >
           {busy ? (
             <span className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
