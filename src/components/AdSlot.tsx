@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { MonitorPlay } from "lucide-react";
 
-const AD_CLIENT = import.meta.env.VITE_ADSENSE_CLIENT as string | undefined;
-const AD_SLOT = import.meta.env.VITE_ADSENSE_SLOT as string | undefined;
+const ENV_CLIENT = import.meta.env.VITE_ADSENSE_CLIENT as string | undefined;
+const ENV_SLOT = import.meta.env.VITE_ADSENSE_SLOT as string | undefined;
 
 declare global {
   interface Window {
@@ -15,8 +15,20 @@ declare global {
  * (VITE_ADSENSE_CLIENT + VITE_ADSENSE_SLOT). Falls back to a neutral
  * placeholder so the reward flow can still be exercised without an account.
  */
-export function AdSlot({ playing, children }: { playing: boolean; children?: React.ReactNode }) {
+export function AdSlot({
+  playing,
+  adClient,
+  adUnitId,
+  children,
+}: {
+  playing: boolean;
+  adClient?: string | null;
+  adUnitId?: string | null;
+  children?: React.ReactNode;
+}) {
   const pushed = useRef(false);
+  const AD_CLIENT = adClient || ENV_CLIENT;
+  const AD_SLOT = adUnitId || ENV_SLOT;
   const configured = Boolean(AD_CLIENT && AD_SLOT);
 
   useEffect(() => {
@@ -38,7 +50,7 @@ export function AdSlot({ playing, children }: { playing: boolean; children?: Rea
       }
     }, 300);
     return () => clearTimeout(t);
-  }, [configured, playing]);
+  }, [configured, playing, AD_CLIENT]);
 
   if (!configured) {
     return (
