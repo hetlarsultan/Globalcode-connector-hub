@@ -3,6 +3,7 @@ import { MonitorPlay, ShieldCheck, Loader2, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AdSlot } from "@/components/AdSlot";
 
 type Phase = "idle" | "starting" | "playing" | "verifying" | "done" | "failed";
 
@@ -24,6 +25,7 @@ export function RewardedAdPanel({ userId, onBalanceChange }: Props) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [left, setLeft] = useState(AD_DURATION);
   const [rewarded, setRewarded] = useState<number | null>(null);
+  const [adLabel, setAdLabel] = useState<string>("");
   const cancelRef = useRef(false);
 
   const loadBalance = useCallback(async () => {
@@ -79,6 +81,7 @@ export function RewardedAdPanel({ userId, onBalanceChange }: Props) {
       const { data, error } = await supabase.functions.invoke("ad-reward-start");
       if (error || !data?.transaction_id) throw error ?? new Error("start_failed");
 
+      setAdLabel(String(data.ad_label ?? ""));
       setLeft(AD_DURATION);
       setPhase("playing");
       await new Promise((r) => setTimeout(r, AD_DURATION * 1000));
@@ -103,7 +106,7 @@ export function RewardedAdPanel({ userId, onBalanceChange }: Props) {
   return (
     <div className="space-y-4">
       <div className="rounded-xl border bg-card p-4 space-y-3">
-        <div className="aspect-video rounded-lg bg-muted flex flex-col items-center justify-center gap-2">
+        <AdSlot playing={phase === "playing"}>
           {phase === "playing" ? (
             <>
               <MonitorPlay className="h-10 w-10 text-primary animate-pulse" />
@@ -115,12 +118,12 @@ export function RewardedAdPanel({ userId, onBalanceChange }: Props) {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
               <span className="text-xs text-muted-foreground">جارٍ التحقق من المشاهدة…</span>
             </>
-          ) : (
-            <MonitorPlay className="h-10 w-10 text-muted-foreground" />
-          )}
-        </div>
+          ) : null}
+        </AdSlot>
 
-        <div className="font-semibold">شاهد إعلانًا واحصل على مكافأتك</div>
+        <div className="font-semibold">
+          شاهد إعلانًا واحصل على مكافأتك{adLabel ? ` — ${adLabel}` : ""}
+        </div>
         <p className="text-sm text-muted-foreground">
           مشاهدة الإعلان اختيارية تمامًا. بعد اكتمال المشاهدة يتم التحقق من العملية عبر خادم شبكة
           الإعلانات، ثم تُضاف حصتك (25%) إلى محفظتك داخل التطبيق.
