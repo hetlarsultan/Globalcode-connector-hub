@@ -15,6 +15,8 @@ interface Placement {
   gross_value: number;
   reward_rate: number;
   is_active: boolean;
+  ad_client: string | null;
+  ad_unit_id: string | null;
 }
 
 interface RewardTx {
@@ -55,7 +57,7 @@ export default function AdminAds() {
 
     const { data: pl } = await supabase
       .from("ad_placements")
-      .select("id,ad_type,label,gross_value,reward_rate,is_active")
+      .select("id,ad_type,label,gross_value,reward_rate,is_active,ad_client,ad_unit_id")
       .order("ad_type");
     setPlacements((pl ?? []) as Placement[]);
 
@@ -88,6 +90,8 @@ export default function AdminAds() {
         gross_value: Number(p.gross_value) || 0,
         reward_rate: Math.min(Math.max(Number(p.reward_rate) || 0, 0), 1),
         is_active: p.is_active,
+        ad_client: p.ad_client?.trim() || null,
+        ad_unit_id: p.ad_unit_id?.trim() || null,
       })
       .eq("id", p.id);
     setSavingId(null);
@@ -177,6 +181,24 @@ export default function AdminAds() {
                   max="1"
                   value={p.reward_rate}
                   onChange={(e) => update(p.id, { reward_rate: Number(e.target.value) })}
+                />
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label className="text-xs">معرّف حساب الإعلانات (ca-pub-…)</Label>
+                <Input
+                  value={p.ad_client ?? ""}
+                  placeholder="ca-pub-xxxxxxxxxxxxxxxx"
+                  onChange={(e) => update(p.id, { ad_client: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">معرّف الوحدة الإعلانية</Label>
+                <Input
+                  value={p.ad_unit_id ?? ""}
+                  placeholder="1234567890"
+                  onChange={(e) => update(p.id, { ad_unit_id: e.target.value })}
                 />
               </div>
             </div>

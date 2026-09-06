@@ -26,6 +26,7 @@ export function RewardedAdPanel({ userId, onBalanceChange }: Props) {
   const [left, setLeft] = useState(AD_DURATION);
   const [rewarded, setRewarded] = useState<number | null>(null);
   const [adLabel, setAdLabel] = useState<string>("");
+  const [adUnit, setAdUnit] = useState<{ client: string | null; slot: string | null }>({ client: null, slot: null });
   const cancelRef = useRef(false);
 
   const loadBalance = useCallback(async () => {
@@ -41,6 +42,15 @@ export function RewardedAdPanel({ userId, onBalanceChange }: Props) {
   }, [userId, onBalanceChange]);
 
   useEffect(() => {
+    void (async () => {
+      const { data } = await supabase
+        .from("ad_placements")
+        .select("ad_client,ad_unit_id")
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      setAdUnit({ client: data?.ad_client ?? null, slot: data?.ad_unit_id ?? null });
+    })();
     void loadBalance();
     return () => { cancelRef.current = true; };
   }, [loadBalance]);
@@ -106,7 +116,7 @@ export function RewardedAdPanel({ userId, onBalanceChange }: Props) {
   return (
     <div className="space-y-4">
       <div className="rounded-xl border bg-card p-4 space-y-3">
-        <AdSlot playing={phase === "playing"}>
+        <AdSlot playing={phase === "playing"} adClient={adUnit.client} adUnitId={adUnit.slot}>
           {phase === "playing" ? (
             <>
               <MonitorPlay className="h-10 w-10 text-primary animate-pulse" />
