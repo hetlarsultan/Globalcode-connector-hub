@@ -94,7 +94,7 @@ export default function AdminAds() {
         ad_client: p.ad_client?.trim() || null,
         ad_unit_id: p.ad_unit_id?.trim() || null,
         ad_app_id: p.ad_app_id?.trim() || null,
-      })
+      } as any)
       .eq("id", p.id);
     setSavingId(null);
     if (error) toast.error("تعذّر حفظ القيمة");
