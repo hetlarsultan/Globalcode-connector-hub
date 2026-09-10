@@ -42,15 +42,6 @@ export function RewardedAdPanel({ userId, onBalanceChange }: Props) {
   }, [userId, onBalanceChange]);
 
   useEffect(() => {
-    void (async () => {
-      const { data } = await supabase
-        .from("ad_placements")
-        .select("ad_client,ad_unit_id")
-        .eq("is_active", true)
-        .limit(1)
-        .maybeSingle();
-      setAdUnit({ client: data?.ad_client ?? null, slot: data?.ad_unit_id ?? null });
-    })();
     void loadBalance();
     return () => { cancelRef.current = true; };
   }, [loadBalance]);
