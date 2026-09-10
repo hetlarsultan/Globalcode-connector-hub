@@ -1,6 +1,7 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { verify } from "../_shared/hmac.ts";
+import { verifyAdMobCallback } from "../_shared/admob-ssv.ts";
 
 // Server-side verification (SSV) callback, called by the ad network only.
 // Never called by the app client. Credits 25% of the network-reported value
@@ -19,6 +20,40 @@ Deno.serve(async (req) => {
     });
 
   try {
+    // --- Real AdMob SSV callback (GET, signed by Google with ECDSA) ---
+    const incoming = new URL(req.url);
+    if (incoming.searchParams.has("key_id") && incoming.searchParams.has("signature")) {
+      const ok = await verifyAdMobCallback(req.url);
+      if (!ok) {
+        console.warn("admob ssv signature invalid");
+        return new Response("invalid signature", { status: 403 });
+      }
+      const q = incoming.searchParams;
+      const uid = q.get("user_id") ?? "";
+      const custom = q.get("custom_data") ?? "";
+      const txId = custom || q.get("transaction_id") || "";
+      const uuidRe2 = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!uuidRe2.test(uid) || !txId) return new Response("bad request", { status: 400 });
+
+      const adminClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
+      const { error: admobErr } = await adminClient.rpc("credit_ad_reward", {
+        p_user_id: uid,
+        p_transaction_id: txId,
+        p_gross_value: 0, // the approved operation value configured by the owner wins
+        p_ad_network: "admob",
+        p_ad_type: "rewarded_video",
+      });
+      if (admobErr) {
+        console.error("credit_ad_reward failed (admob)", admobErr);
+        return new Response("credit failed", { status: 500 });
+      }
+      // AdMob expects a 200 with an empty body.
+      return new Response("", { status: 200 });
+    }
+
     let params: Record<string, string> = {};
     if (req.method === "GET") {
       params = Object.fromEntries(new URL(req.url).searchParams.entries());
