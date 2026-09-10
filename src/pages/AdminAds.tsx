@@ -93,6 +93,7 @@ export default function AdminAds() {
         is_active: p.is_active,
         ad_client: p.ad_client?.trim() || null,
         ad_unit_id: p.ad_unit_id?.trim() || null,
+        ad_app_id: p.ad_app_id?.trim() || null,
       })
       .eq("id", p.id);
     setSavingId(null);
