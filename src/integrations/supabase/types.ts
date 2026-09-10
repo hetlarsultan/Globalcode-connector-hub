@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       ad_placements: {
         Row: {
+          ad_app_id: string | null
           ad_client: string | null
           ad_type: string
           ad_unit_id: string | null
@@ -28,6 +29,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ad_app_id?: string | null
           ad_client?: string | null
           ad_type: string
           ad_unit_id?: string | null
@@ -40,6 +42,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ad_app_id?: string | null
           ad_client?: string | null
           ad_type?: string
           ad_unit_id?: string | null
