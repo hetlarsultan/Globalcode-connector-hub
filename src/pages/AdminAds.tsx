@@ -58,7 +58,7 @@ export default function AdminAds() {
 
     const { data: pl } = await supabase
       .from("ad_placements")
-      .select("id,ad_type,label,gross_value,reward_rate,is_active,ad_client,ad_unit_id")
+      .select("id,ad_type,label,gross_value,reward_rate,is_active,ad_client,ad_unit_id,ad_app_id")
       .order("ad_type");
     setPlacements((pl ?? []) as Placement[]);
 
