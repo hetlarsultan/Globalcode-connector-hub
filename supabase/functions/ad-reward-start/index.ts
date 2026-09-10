@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     const requested = new URL(req.url).searchParams.get("ad_type");
     const { data: placement } = await supabase
       .from("ad_placements")
-      .select("ad_type,label")
+      .select("ad_type,label,ad_client,ad_unit_id,ad_app_id")
       .eq("is_active", true)
       .eq(requested ? "ad_type" : "is_active", requested ?? true)
       .limit(1)
