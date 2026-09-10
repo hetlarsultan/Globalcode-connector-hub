@@ -204,6 +204,16 @@ export default function AdminAds() {
                 />
               </div>
             </div>
+            <div className="grid gap-3 sm:grid-cols-1">
+              <div className="space-y-1">
+                <Label className="text-xs">معرّف تطبيق AdMob (ca-app-pub-…~…)</Label>
+                <Input
+                  value={p.ad_app_id ?? ""}
+                  placeholder="ca-app-pub-xxxxxxxxxxxxxxxx~nnnnnnnnnn"
+                  onChange={(e) => update(p.id, { ad_app_id: e.target.value })}
+                />
+              </div>
+            </div>
             <Button size="sm" onClick={() => save(p)} disabled={savingId === p.id}>
               {savingId === p.id ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
