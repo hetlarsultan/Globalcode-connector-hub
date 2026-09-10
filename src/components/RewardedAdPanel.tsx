@@ -83,6 +83,10 @@ export function RewardedAdPanel({ userId, onBalanceChange }: Props) {
       if (error || !data?.transaction_id) throw error ?? new Error("start_failed");
 
       setAdLabel(String(data.ad_label ?? ""));
+      setAdUnit({
+        client: (data.ad_client as string | null) ?? null,
+        slot: (data.ad_unit_id as string | null) ?? null,
+      });
       setLeft(AD_DURATION);
       setPhase("playing");
       await new Promise((r) => setTimeout(r, AD_DURATION * 1000));
