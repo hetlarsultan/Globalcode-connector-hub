@@ -49,6 +49,9 @@ Deno.serve(async (req) => {
       nonce,
       ad_type: placement.ad_type,
       ad_label: placement.label,
+      ad_client: placement.ad_client,
+      ad_unit_id: placement.ad_unit_id,
+      ad_app_id: placement.ad_app_id,
     });
   } catch (e) {
     console.error("ad-reward-start error", e);
