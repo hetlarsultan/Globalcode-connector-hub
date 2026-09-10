@@ -17,6 +17,7 @@ interface Placement {
   is_active: boolean;
   ad_client: string | null;
   ad_unit_id: string | null;
+  ad_app_id: string | null;
 }
 
 interface RewardTx {
