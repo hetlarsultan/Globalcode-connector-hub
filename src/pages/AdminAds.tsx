@@ -17,6 +17,7 @@ interface Placement {
   is_active: boolean;
   ad_client: string | null;
   ad_unit_id: string | null;
+  ad_app_id: string | null;
 }
 
 interface RewardTx {
@@ -57,9 +58,9 @@ export default function AdminAds() {
 
     const { data: pl } = await supabase
       .from("ad_placements")
-      .select("id,ad_type,label,gross_value,reward_rate,is_active,ad_client,ad_unit_id")
+      .select("id,ad_type,label,gross_value,reward_rate,is_active,ad_client,ad_unit_id,ad_app_id")
       .order("ad_type");
-    setPlacements((pl ?? []) as Placement[]);
+    setPlacements((pl as unknown as Placement[]) ?? []);
 
     if (admin) {
       const { data: tx } = await supabase
@@ -92,7 +93,8 @@ export default function AdminAds() {
         is_active: p.is_active,
         ad_client: p.ad_client?.trim() || null,
         ad_unit_id: p.ad_unit_id?.trim() || null,
-      })
+        ad_app_id: p.ad_app_id?.trim() || null,
+      } as any)
       .eq("id", p.id);
     setSavingId(null);
     if (error) toast.error("تعذّر حفظ القيمة");
@@ -199,6 +201,16 @@ export default function AdminAds() {
                   value={p.ad_unit_id ?? ""}
                   placeholder="1234567890"
                   onChange={(e) => update(p.id, { ad_unit_id: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-1">
+              <div className="space-y-1">
+                <Label className="text-xs">معرّف تطبيق AdMob (ca-app-pub-…~…)</Label>
+                <Input
+                  value={p.ad_app_id ?? ""}
+                  placeholder="ca-app-pub-xxxxxxxxxxxxxxxx~nnnnnnnnnn"
+                  onChange={(e) => update(p.id, { ad_app_id: e.target.value })}
                 />
               </div>
             </div>
