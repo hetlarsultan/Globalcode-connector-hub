@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AdSlot } from "@/components/AdSlot";
+import { isNativeApp, showRewardedAd, REWARDED_AD_UNIT_ID } from "@/lib/admob";
 
 type Phase = "idle" | "starting" | "playing" | "verifying" | "done" | "failed";
 
@@ -89,7 +90,28 @@ export function RewardedAdPanel({ userId, onBalanceChange }: Props) {
       });
       setLeft(AD_DURATION);
       setPhase("playing");
-      await new Promise((r) => setTimeout(r, AD_DURATION * 1000));
+
+      if (isNativeApp()) {
+        // Real AdMob rewarded ad on the mobile app. AdMob calls our SSV
+        // endpoint after a valid view; the wallet is credited server-side.
+        const slot = String(data.ad_unit_id ?? "");
+        const adUnitId = slot.startsWith("ca-app-pub")
+          ? slot
+          : slot
+            ? `ca-app-pub-8449241346087567/${slot}`
+            : REWARDED_AD_UNIT_ID;
+        const earned = await showRewardedAd({
+          userId: data.user_id as string,
+          transactionId: data.transaction_id as string,
+          adUnitId,
+        });
+        if (!earned) {
+          setPhase("failed");
+          return;
+        }
+      } else {
+        await new Promise((r) => setTimeout(r, AD_DURATION * 1000));
+      }
 
       setPhase("verifying");
       const reward = await waitForVerification(data.transaction_id as string);
