@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { MonitorPlay, ShieldCheck, Loader2, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { AdSlot } from "@/components/AdSlot";
 import { isNativeApp, showRewardedAd, REWARDED_AD_UNIT_ID } from "@/lib/admob";
 
