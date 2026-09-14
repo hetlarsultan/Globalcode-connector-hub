@@ -122,7 +122,6 @@ export function RewardedAdPanel({ userId, onBalanceChange }: Props) {
       setRewarded(reward);
       setPhase("done");
       await loadBalance();
-      toast.success("تمت إضافة مكافأتك إلى محفظتك بنجاح.");
     } catch {
       setPhase("failed");
     }
