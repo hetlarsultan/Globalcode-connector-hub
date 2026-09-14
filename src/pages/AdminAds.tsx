@@ -101,6 +101,41 @@ export default function AdminAds() {
     else toast.success("تم حفظ قيمة العملية المعتمدة");
   };
 
+  /** Official AdMob values for this app, applied to every placement at once. */
+  const ADMOB = {
+    appId: "ca-app-pub-8449241346087567~3470418204",
+    client: "ca-pub-8449241346087567",
+    units: {
+      rewarded_video: "ca-app-pub-8449241346087567/9406482611",
+      rewarded_interstitial: "ca-app-pub-8449241346087567/5833691810",
+    } as Record<string, string>,
+  };
+
+  const syncAdmob = async () => {
+    setSavingId("sync");
+    let ok = true;
+    for (const p of placements) {
+      const unit = ADMOB.units[p.ad_type] ?? p.ad_unit_id;
+      const { error } = await supabase
+        .from("ad_placements")
+        .update({
+          ad_app_id: ADMOB.appId,
+          ad_client: ADMOB.client,
+          ad_unit_id: unit,
+          reward_rate: 0.25,
+        } as any)
+        .eq("id", p.id);
+      if (error) ok = false;
+    }
+    setSavingId(null);
+    if (!ok) {
+      toast.error("تعذّرت مزامنة بعض الإعدادات");
+      return;
+    }
+    toast.success("تمت مزامنة إعدادات AdMob");
+    await load();
+  };
+
   const removeTx = async (id: string) => {
     const { error } = await supabase.from("ad_reward_transactions").delete().eq("id", id);
     if (error) {
