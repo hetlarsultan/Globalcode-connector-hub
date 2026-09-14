@@ -203,6 +203,45 @@ export type Database = {
           },
         ]
       }
+      payouts: {
+        Row: {
+          account_details: string
+          admin_note: string | null
+          amount: number
+          created_at: string
+          id: string
+          method: string
+          processed_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_details: string
+          admin_note?: string | null
+          amount: number
+          created_at?: string
+          id?: string
+          method?: string
+          processed_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_details?: string
+          admin_note?: string | null
+          amount?: number
+          created_at?: string
+          id?: string
+          method?: string
+          processed_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       private_messages: {
         Row: {
           content: string
@@ -406,6 +445,17 @@ export type Database = {
       get_my_age: { Args: never; Returns: number }
       mark_pm_read: { Args: { p_id: string }; Returns: undefined }
       mark_pm_thread_read: { Args: { p_sender: string }; Returns: undefined }
+      request_payout: {
+        Args: { p_account_details: string; p_amount: number; p_method: string }
+        Returns: {
+          new_balance: number
+          payout_id: string
+        }[]
+      }
+      settle_payout: {
+        Args: { p_note?: string; p_payout_id: string; p_status: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "member" | "visitor"
