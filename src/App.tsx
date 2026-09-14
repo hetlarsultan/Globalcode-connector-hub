@@ -39,6 +39,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <UpdatePrompt />
+          <RewardNotifier />
           <Suspense fallback={<Fallback />}>
             <Routes>
               <Route path="/" element={<Index />} />
