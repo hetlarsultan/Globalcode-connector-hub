@@ -178,7 +178,17 @@ export default function AdminAds() {
       </header>
 
       <section className="space-y-3">
-        <h2 className="font-semibold">قيم العمليات المعتمدة لكل نوع إعلان</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-semibold">قيم العمليات المعتمدة لكل نوع إعلان</h2>
+          <Button size="sm" variant="outline" onClick={syncAdmob} disabled={savingId === "sync"}>
+            {savingId === "sync" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            مزامنة إعدادات AdMob
+          </Button>
+        </div>
         {placements.map((p) => (
           <div key={p.id} className="rounded-xl border bg-card p-4 space-y-3">
             <div className="flex items-center justify-between gap-2">
