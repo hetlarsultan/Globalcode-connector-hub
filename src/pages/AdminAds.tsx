@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Loader2, Save, Trash2, ShieldAlert } from "lucide-react";
+import { ArrowRight, Loader2, Save, Trash2, ShieldAlert, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -101,6 +101,41 @@ export default function AdminAds() {
     else toast.success("تم حفظ قيمة العملية المعتمدة");
   };
 
+  /** Official AdMob values for this app, applied to every placement at once. */
+  const ADMOB = {
+    appId: "ca-app-pub-8449241346087567~3470418204",
+    client: "ca-pub-8449241346087567",
+    units: {
+      rewarded_video: "ca-app-pub-8449241346087567/9406482611",
+      rewarded_interstitial: "ca-app-pub-8449241346087567/5833691810",
+    } as Record<string, string>,
+  };
+
+  const syncAdmob = async () => {
+    setSavingId("sync");
+    let ok = true;
+    for (const p of placements) {
+      const unit = ADMOB.units[p.ad_type] ?? p.ad_unit_id;
+      const { error } = await supabase
+        .from("ad_placements")
+        .update({
+          ad_app_id: ADMOB.appId,
+          ad_client: ADMOB.client,
+          ad_unit_id: unit,
+          reward_rate: 0.25,
+        } as any)
+        .eq("id", p.id);
+      if (error) ok = false;
+    }
+    setSavingId(null);
+    if (!ok) {
+      toast.error("تعذّرت مزامنة بعض الإعدادات");
+      return;
+    }
+    toast.success("تمت مزامنة إعدادات AdMob");
+    await load();
+  };
+
   const removeTx = async (id: string) => {
     const { error } = await supabase.from("ad_reward_transactions").delete().eq("id", id);
     if (error) {
@@ -143,7 +178,17 @@ export default function AdminAds() {
       </header>
 
       <section className="space-y-3">
-        <h2 className="font-semibold">قيم العمليات المعتمدة لكل نوع إعلان</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-semibold">قيم العمليات المعتمدة لكل نوع إعلان</h2>
+          <Button size="sm" variant="outline" onClick={syncAdmob} disabled={savingId === "sync"}>
+            {savingId === "sync" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            مزامنة إعدادات AdMob
+          </Button>
+        </div>
         {placements.map((p) => (
           <div key={p.id} className="rounded-xl border bg-card p-4 space-y-3">
             <div className="flex items-center justify-between gap-2">
