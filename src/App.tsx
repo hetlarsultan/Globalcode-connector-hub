@@ -47,6 +47,8 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/points" element={<Points />} />
               <Route path="/admin/ads" element={<AdminAds />} />
+              <Route path="/wallet" element={<WalletAdmin />} />
+              <Route path="/ads" element={<AdsPage />} />
               <Route path="/auth" element={<Auth />} />
 
               <Route path="*" element={<NotFound />} />
