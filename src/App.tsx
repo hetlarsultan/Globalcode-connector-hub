@@ -12,6 +12,8 @@ const Index = lazy(() => import("./pages/Index.tsx"));
 const Auth = lazy(() => import("./pages/Auth.tsx"));
 const Points = lazy(() => import("./pages/Points.tsx"));
 const AdminAds = lazy(() => import("./pages/AdminAds.tsx"));
+const WalletAdmin = lazy(() => import("./pages/WalletAdmin.tsx"));
+const AdsPage = lazy(() => import("./pages/AdsPage.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 const queryClient = new QueryClient({
@@ -45,6 +47,8 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/points" element={<Points />} />
               <Route path="/admin/ads" element={<AdminAds />} />
+              <Route path="/wallet" element={<WalletAdmin />} />
+              <Route path="/ads" element={<AdsPage />} />
               <Route path="/auth" element={<Auth />} />
 
               <Route path="*" element={<NotFound />} />
