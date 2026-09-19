@@ -78,6 +78,7 @@ export function RewardedAdPanel({ userId, onBalanceChange }: Props) {
     if (phase === "starting" || phase === "playing" || phase === "verifying") return;
     setRewarded(null);
     setPhase("starting");
+    let viewId: string | null = null;
     try {
       const { data, error } = await supabase.functions.invoke("ad-reward-start");
       if (error || !data?.transaction_id) throw error ?? new Error("start_failed");
@@ -89,6 +90,20 @@ export function RewardedAdPanel({ userId, onBalanceChange }: Props) {
       });
       setLeft(AD_DURATION);
       setPhase("playing");
+
+      // Record the view itself (unit, type, time) for the ads page log.
+      const { data: view } = await supabase
+        .from("ad_views")
+        .insert({
+          user_id: userId,
+          ad_type: String(data.ad_type ?? "rewarded_video"),
+          ad_unit_id: (data.ad_unit_id as string | null) ?? null,
+          ad_network: isNativeApp() ? "admob" : "web",
+          transaction_id: String(data.transaction_id),
+        } as never)
+        .select("id")
+        .maybeSingle();
+      viewId = (view as { id?: string } | null)?.id ?? null;
 
       if (isNativeApp()) {
         // Real AdMob rewarded ad on the mobile app. AdMob calls our SSV
@@ -110,6 +125,13 @@ export function RewardedAdPanel({ userId, onBalanceChange }: Props) {
         }
       } else {
         await new Promise((r) => setTimeout(r, AD_DURATION * 1000));
+      }
+
+      if (viewId) {
+        await supabase
+          .from("ad_views")
+          .update({ completed: true, completed_at: new Date().toISOString() } as never)
+          .eq("id", viewId);
       }
 
       setPhase("verifying");
