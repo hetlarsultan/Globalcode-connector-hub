@@ -59,7 +59,7 @@ export default function WalletAdmin() {
     const admin = (roles ?? []).some((r) => r.role === "admin");
     setIsAdmin(admin);
     setBalance(Number(w?.balance ?? 0));
-    const list = ((p ?? []) as unknown as Payout[]) ?? [];
+    const list = (p ?? []) as unknown as Payout[];
     setPayouts(list);
 
     if (admin) {
@@ -68,7 +68,7 @@ export default function WalletAdmin() {
         .select("user_id,balance")
         .order("balance", { ascending: false })
         .limit(200);
-      setWallets(((allW ?? []) as unknown as WalletRow[]) ?? []);
+      setWallets((allW ?? []) as unknown as WalletRow[]);
       const ids = Array.from(
         new Set([...(allW ?? []).map((x) => x.user_id), ...list.map((x) => x.user_id)]),
       );
