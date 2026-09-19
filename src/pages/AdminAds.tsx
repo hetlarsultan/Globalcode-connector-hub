@@ -136,6 +136,23 @@ export default function AdminAds() {
     await load();
   };
 
+  // Automatic sync: as soon as an admin opens the page, any placement whose
+  // AdMob app id, ad account or ad unit differs from the console values is
+  // updated without pressing the sync button.
+  useEffect(() => {
+    if (!isAdmin || autoSynced.current || placements.length === 0) return;
+    const stale = placements.some(
+      (p) =>
+        p.ad_app_id !== ADMOB.appId ||
+        p.ad_client !== ADMOB.client ||
+        (ADMOB.units[p.ad_type] && p.ad_unit_id !== ADMOB.units[p.ad_type]),
+    );
+    if (!stale) return;
+    autoSynced.current = true;
+    void syncAdmob();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, placements]);
+
   const removeTx = async (id: string) => {
     const { error } = await supabase.from("ad_reward_transactions").delete().eq("id", id);
     if (error) {
