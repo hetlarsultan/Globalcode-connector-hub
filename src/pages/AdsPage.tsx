@@ -15,20 +15,38 @@ interface Placement {
   ad_unit_id: string | null;
 }
 
-/** Non-rewarded ad placements (banner / interstitial) shown to everyone. */
+interface AdView {
+  id: string;
+  ad_type: string;
+  ad_unit_id: string | null;
+  ad_network: string;
+  completed: boolean;
+  started_at: string;
+}
+
+/** Non-rewarded ad placements (banner / interstitial) plus the view log. */
 export default function AdsPage() {
   const [items, setItems] = useState<Placement[]>([]);
+  const [views, setViews] = useState<AdView[]>([]);
 
   useEffect(() => {
     void (async () => {
-      const { data } = await supabase
-        .from("ad_placements")
-        .select("id,ad_type,label,reward_rate,is_active,ad_client,ad_unit_id")
-        .eq("is_active", true)
-        .order("ad_type");
+      const [{ data }, { data: v }] = await Promise.all([
+        supabase
+          .from("ad_placements")
+          .select("id,ad_type,label,reward_rate,is_active,ad_client,ad_unit_id")
+          .eq("is_active", true)
+          .order("ad_type"),
+        supabase
+          .from("ad_views")
+          .select("id,ad_type,ad_unit_id,ad_network,completed,started_at")
+          .order("started_at", { ascending: false })
+          .limit(50),
+      ]);
       setItems(
         ((data ?? []) as unknown as Placement[]).filter((p) => !p.ad_type.startsWith("rewarded")),
       );
+      setViews((v ?? []) as unknown as AdView[]);
     })();
   }, []);
 
