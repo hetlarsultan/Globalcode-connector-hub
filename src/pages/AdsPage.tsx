@@ -15,20 +15,38 @@ interface Placement {
   ad_unit_id: string | null;
 }
 
-/** Non-rewarded ad placements (banner / interstitial) shown to everyone. */
+interface AdView {
+  id: string;
+  ad_type: string;
+  ad_unit_id: string | null;
+  ad_network: string;
+  completed: boolean;
+  started_at: string;
+}
+
+/** Non-rewarded ad placements (banner / interstitial) plus the view log. */
 export default function AdsPage() {
   const [items, setItems] = useState<Placement[]>([]);
+  const [views, setViews] = useState<AdView[]>([]);
 
   useEffect(() => {
     void (async () => {
-      const { data } = await supabase
-        .from("ad_placements")
-        .select("id,ad_type,label,reward_rate,is_active,ad_client,ad_unit_id")
-        .eq("is_active", true)
-        .order("ad_type");
+      const [{ data }, { data: v }] = await Promise.all([
+        supabase
+          .from("ad_placements")
+          .select("id,ad_type,label,reward_rate,is_active,ad_client,ad_unit_id")
+          .eq("is_active", true)
+          .order("ad_type"),
+        supabase
+          .from("ad_views")
+          .select("id,ad_type,ad_unit_id,ad_network,completed,started_at")
+          .order("started_at", { ascending: false })
+          .limit(50),
+      ]);
       setItems(
         ((data ?? []) as unknown as Placement[]).filter((p) => !p.ad_type.startsWith("rewarded")),
       );
+      setViews((v ?? []) as unknown as AdView[]);
     })();
   }, []);
 
@@ -64,6 +82,29 @@ export default function AdsPage() {
           <AdSlot playing adClient={p.ad_client} adUnitId={p.ad_unit_id} />
         </section>
       ))}
+
+      <section className="space-y-2">
+        <h2 className="font-semibold">سجل مشاهدات الإعلانات</h2>
+        {views.length === 0 && (
+          <p className="text-sm text-muted-foreground">لا توجد مشاهدات مسجّلة بعد.</p>
+        )}
+        {views.map((v) => (
+          <div key={v.id} className="rounded-xl border bg-card p-3 text-sm space-y-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-semibold">{v.ad_type}</span>
+              <span className="text-xs text-muted-foreground">
+                {v.completed ? "مكتملة" : "غير مكتملة"}
+              </span>
+            </div>
+            <div className="text-muted-foreground break-all">
+              الوحدة: {v.ad_unit_id ?? "—"} · المصدر: {v.ad_network}
+            </div>
+            <div className="text-muted-foreground">
+              {new Date(v.started_at).toLocaleString("ar")}
+            </div>
+          </div>
+        ))}
+      </section>
     </main>
   );
 }

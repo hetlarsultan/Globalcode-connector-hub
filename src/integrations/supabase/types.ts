@@ -107,6 +107,48 @@ export type Database = {
         }
         Relationships: []
       }
+      ad_views: {
+        Row: {
+          ad_network: string
+          ad_type: string
+          ad_unit_id: string | null
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          started_at: string
+          transaction_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ad_network?: string
+          ad_type?: string
+          ad_unit_id?: string | null
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          started_at?: string
+          transaction_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ad_network?: string
+          ad_type?: string
+          ad_unit_id?: string | null
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          started_at?: string
+          transaction_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       banned_words: {
         Row: {
           created_at: string
