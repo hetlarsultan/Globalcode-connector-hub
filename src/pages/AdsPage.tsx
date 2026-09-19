@@ -82,6 +82,29 @@ export default function AdsPage() {
           <AdSlot playing adClient={p.ad_client} adUnitId={p.ad_unit_id} />
         </section>
       ))}
+
+      <section className="space-y-2">
+        <h2 className="font-semibold">سجل مشاهدات الإعلانات</h2>
+        {views.length === 0 && (
+          <p className="text-sm text-muted-foreground">لا توجد مشاهدات مسجّلة بعد.</p>
+        )}
+        {views.map((v) => (
+          <div key={v.id} className="rounded-xl border bg-card p-3 text-sm space-y-1">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-semibold">{v.ad_type}</span>
+              <span className="text-xs text-muted-foreground">
+                {v.completed ? "مكتملة" : "غير مكتملة"}
+              </span>
+            </div>
+            <div className="text-muted-foreground break-all">
+              الوحدة: {v.ad_unit_id ?? "—"} · المصدر: {v.ad_network}
+            </div>
+            <div className="text-muted-foreground">
+              {new Date(v.started_at).toLocaleString("ar")}
+            </div>
+          </div>
+        ))}
+      </section>
     </main>
   );
 }
