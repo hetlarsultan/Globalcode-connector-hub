@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Loader2, Save, Trash2, ShieldAlert, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +38,7 @@ export default function AdminAds() {
   const [placements, setPlacements] = useState<Placement[]>([]);
   const [txs, setTxs] = useState<RewardTx[]>([]);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const autoSynced = useRef(false);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
