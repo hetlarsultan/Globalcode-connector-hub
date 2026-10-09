@@ -152,13 +152,16 @@ export default function ManagedAds() {
     setRun(p.id, { phase: "starting", rewarded: null, left: AD_DURATION });
     let viewId: string | null = null;
     try {
-      const { data, error } = await supabase.functions.invoke("ad-reward-start", {
-        headers: {},
-        // pass the requested ad type so the right placement is used
-        // (the function reads it from the query string)
-        // @ts-expect-error supabase-js query param via body not supported; use fetch-style below
-      });
-      if (error || !data?.transaction_id) throw error ?? new Error("start_failed");
+      // Request a session for this specific placement type (read from query string).
+      const { data: sess } = await supabase.auth.getSession();
+      const token = sess?.session?.access_token;
+      if (!token) throw new Error("unauthorized");
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ad-reward-start?ad_type=${encodeURIComponent(p.ad_type)}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.transaction_id) throw new Error("start_failed");
 
       setRun(p.id, { phase: "playing", left: AD_DURATION });
 
